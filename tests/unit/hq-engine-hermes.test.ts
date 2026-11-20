@@ -120,13 +120,26 @@ try {
   while (db.prepare("SELECT value FROM settings WHERE key='team:restart-needed'").get()?.value === "yes" && Date.now() < quietEnd) await new Promise((resolve) => setTimeout(resolve, 10));
   assert.equal((await engine.ready(bot)).ok, true);
   const runningController = new AbortController();
-  gateway.options.script = null;
-  const working = run(engine, bot, input, runningController);
+  gateway.options.script = frame("response.output_text.delta", { delta: "Still working" });
+  gateway.options.holdOpen = true;
+  const runningEvents: EngineEvent[] = [];
+  const working = engine.run(bot, input, event => runningEvents.push(event), runningController.signal);
+  // Wait for a streamed word, then keep the reply open until the test stops it.
+  const turnDeadline = Date.now() + 5000;
+  while (!runningEvents.some(event => event.type === "text") && Date.now() < turnDeadline) {
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  assert.ok(runningEvents.some(event => event.type === "text"), "the turn has started answering");
   const ownTurnStops = stops();
   bot = updateBot(bot.id, { primary: { ...bot.primary, effort: "xhigh" } });
   assert.equal((await engine.ensure(bot)).ok, false);
   assert.equal(stops(), ownTurnStops, "a running turn prevents a restart even without a busy answer from HQ");
   runningController.abort(); await working;
+  assert.equal(runningEvents.filter(event => event.type === "failed" || event.type === "done").length, 1);
+  const ending = runningEvents.at(-1);
+  assert.ok(ending?.type === "failed");
+  assert.equal(ending.reason, "stopped");
+  gateway.options.holdOpen = false;
   const ownTurnEnd = Date.now() + 2000;
   while (db.prepare("SELECT value FROM settings WHERE key='team:restart-needed'").get()?.value === "yes" && Date.now() < ownTurnEnd) await new Promise((resolve) => setTimeout(resolve, 10));
   assert.equal(stops(), ownTurnStops + 1);

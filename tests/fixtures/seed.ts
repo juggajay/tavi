@@ -8,6 +8,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, renameSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { cast } from "./cast.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PY = path.join(ROOT, ".venv", "Scripts", "python.exe");
@@ -21,12 +22,12 @@ const ago = (days: number, hour: number, minute = 0) => {
 
 const CONVERSATION: [number, number, number, "user" | "assistant", "voice" | "typed", string][] = [
   [2, 7, 5, "user", "voice", "Morning. What's on today?"],
-  [2, 7, 5, "assistant", "voice", "Morning Nemi. The Lee job framing inspection is at ten, and Ruvo wants the window sizes by lunch."],
+  [2, 7, 5, "assistant", "voice", `Morning ${cast.owner.short}. The household inspection is at ten, and ${cast.friend.short} wants the window sizes by lunch.`],
   [2, 9, 40, "user", "voice", "Remind me to order the 90 by 45 for Friday."],
   [2, 9, 40, "assistant", "voice", "Will do. I'll remind you at three this afternoon."],
   [1, 6, 50, "user", "typed", "How wide is door D07 on the Sample House plans?"],
   [1, 6, 50, "assistant", "typed", "D07 is a 720 wide hollow door, type SD3, with a privacy set. It's on the ground floor plan, A-101."],
-  [1, 12, 15, "user", "voice", "Did Ruvo ever send the window sizes?"],
+  [1, 12, 15, "user", "voice", `Did ${cast.friend.short} ever send the window sizes?`],
   [1, 12, 15, "assistant", "voice", "Not yet. Want me to chase them?"],
   [0, 7, 0, "user", "voice", "What's the weather doing tomorrow?"],
   [0, 7, 0, "assistant", "voice", "Fine and 24, with a southerly in the late afternoon."],
@@ -44,11 +45,11 @@ export async function seed(dir: string) {
   const { queueNotification } = await import("../../src/proactive/notify.js");
 
   // Profile
-  setAssistantName("Tavi", "fixture");
+  setAssistantName(cast.assistant, "fixture");
   const you = { trust: "user" as const, source: "fixture" };
-  editUser({ op: "add", section: "Basics", text: "Name: Nemi Venn. Helps at a club and plans household projects." }, you);
+  editUser({ op: "add", section: "Basics", text: `Name: ${cast.owner.name}. Helps at a club and plans household projects.` }, you);
   editUser({ op: "add", section: "Work", text: "Current jobs: Sample House (new build) and the Lee renovation." }, you);
-  editUser({ op: "add", section: "People", text: "Ruvo Pell: window supplier, ruvo@example.com." }, you);
+  editUser({ op: "add", section: "People", text: `${cast.friend.name}: window supplier, ${cast.friend.email}.` }, you);
   editUser({ op: "add", section: "How to talk to them", text: "Short and plain. No small talk before seven." }, you);
   // Nemi has had the getting-to-know-you sit-down already, so the fake brain doesn't offer it in every test (sitdown.test.mjs resets it).
   db.prepare("INSERT INTO settings (key, value) VALUES ('sitdown', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(
@@ -56,15 +57,15 @@ export async function seed(dir: string) {
   );
 
   // Memories
-  remember({ kind: "user", subject: "Nemi", fact: "Starts on site at 6:30 most days.", source: "fixture" });
-  remember({ kind: "person", subject: "Ruvo Pell", fact: "Window supplier. Prefers email to phone calls.", source: "fixture" });
+  remember({ kind: "user", subject: cast.owner.short, fact: "Starts on site at 6:30 most days.", source: "fixture" });
+  remember({ kind: "person", subject: cast.friend.name, fact: "Window supplier. Prefers email to phone calls.", source: "fixture" });
   remember({ kind: "project", subject: "Sample House", fact: "Two-storey new build. Frame stage. Inspector is booked through the council.", source: "fixture" });
   remember({ kind: "preference", subject: "Timber", fact: "Uses the saved shop unless it is out of stock.", source: "fixture" });
   remember({ kind: "project", subject: "Lee renovation", fact: "Kitchen and laundry. Cabinets arrive in two weeks.", source: "fixture" });
 
   // Commitments and routines
   addCommitment({ title: "Order 90x45 MGP10 for Friday", owner: "user", kind: "remind", due_at: new Date(Date.now() + 6 * 3600_000).toISOString(), source: "fixture" });
-  addCommitment({ title: "Window sizes for Sample House", owner: "Ruvo Pell", counterpart: "Ruvo Pell", due_at: new Date(Date.now() + DAY).toISOString(), source: "fixture" });
+  addCommitment({ title: "Window sizes for Sample House", owner: cast.friend.name, counterpart: cast.friend.name, due_at: new Date(Date.now() + DAY).toISOString(), source: "fixture" });
   ensureBuiltinRoutines();
   createRoutine({ title: "Friday timber check", instructions: "Check what timber is still to order for next week.", schedule: { kind: "weekly", days: [5], time: "07:30" } });
 
@@ -73,13 +74,13 @@ export async function seed(dir: string) {
   for (const [d, h, m, role, channel, text] of CONVERSATION) insert.run(ago(d, h, m), role, channel, text);
 
   // A pending email approval. Approvals normally expire in 15 minutes; a fixture one stays up for a week.
-  const draft = saveDraft({ account: "Work email", to: ["ruvo@example.com"], subject: "Window sizes for Sample House", body: "Hi Ruvo,\n\nCould you send the window sizes for Sample House by Thursday? The frame is going up next week.\n\nThanks,\nNemi" });
+  const draft = saveDraft({ account: "Work email", to: [cast.friend.email], subject: "Window sizes for Sample House", body: `Hi ${cast.friend.short},\n\nCould you send the window sizes for Sample House by Thursday? The frame is going up next week.\n\nThanks,\n${cast.owner.short}` });
   const approval = requestEmailApproval(draft);
   db.prepare("UPDATE approvals SET expires_at = ? WHERE id = ?").run(new Date(Date.now() + 7 * DAY).toISOString(), approval.id);
 
   // Waiting notifications
   queueNotification({ title: "Framing inspection", spoken: "Your framing inspection at the Lee job is at ten.", priority: "low", source: "fixture" });
-  queueNotification({ title: "Ruvo replied", spoken: "Ruvo replied about the windows. Want me to read it?", priority: "low", source: "fixture" });
+  queueNotification({ title: `${cast.friend.short} replied`, spoken: `${cast.friend.short} replied about the windows. Want me to read it?`, priority: "low", source: "fixture" });
 
   // Drawings: generate the sample set into the drawings folder, then index it the normal way.
   const drawings = path.join(DATA_DIR, "drawings");

@@ -45,7 +45,7 @@ export const scripts = {
   cutOff: frame("response.output_text.delta", { delta: "Half an answer" }),
   never: null,
 };
-export type FakeReply = { script?: string | null; status?: number; chunkBytes?: number; delayMs?: number; firstDelayMs?: number; cutAt?: number };
+export type FakeReply = { script?: string | null; status?: number; chunkBytes?: number; delayMs?: number; firstDelayMs?: number; cutAt?: number; holdOpen?: boolean };
 export type FakeHermesOptions = FakeReply & {
   authenticated?: boolean | Record<string, boolean>; health?: boolean;
   rootKey?: string;
@@ -91,7 +91,7 @@ export async function fakeHermes(options: FakeHermesOptions = {}) {
       if (res.destroyed) return;
       if (!res.headersSent) res.writeHead(reply.status ?? 200, { "Content-Type": "text/event-stream" });
       const end = Math.min(bytes.length, reply.cutAt ?? bytes.length);
-      if (position >= end) { res.end(); return; }
+      if (position >= end) { if (!reply.holdOpen) res.end(); return; }
       const next = Math.min(end, position + (reply.chunkBytes ?? bytes.length));
       res.write(bytes.subarray(position, next));
       position = next;

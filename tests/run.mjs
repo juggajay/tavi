@@ -48,6 +48,7 @@ const run = (file) =>
 // A few tests time real waits and can trip on a busy PC. A file that fails gets one more try, by itself, and the
 // report says so: a test that fails twice is a failure, and one that needed its second try is named, never hidden.
 let failed = 0;
+const failures = [];
 const secondTry = [];
 for (const file of files) {
   let r = await run(file);
@@ -61,9 +62,11 @@ for (const file of files) {
   console.log(`${r.ok ? "PASS" : "FAIL"}  ${name}  (${(r.ms / 1000).toFixed(1)}s)${secondTry.includes(name) ? "  (on its second try)" : ""}`);
   if (!r.ok) {
     failed++;
+    failures.push(name);
     console.log(r.out.trimEnd().split("\n").map((l) => `      ${l}`).join("\n"));
   }
 }
 console.log(`\n${files.length - failed} of ${files.length} passed`);
+if (failures.length) console.log(`Failed tests:\n${failures.map(name => `  ${name}`).join("\n")}`);
 if (secondTry.length) console.log(`Passed only on a second try (worth a look if it keeps happening): ${secondTry.join(", ")}`);
 process.exit(failed ? 1 : 0);
