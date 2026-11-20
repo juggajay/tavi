@@ -14,6 +14,9 @@ Sign in to your AI subscriptions yourself, inside the app after installation.
 
 ## Before the first installation
 
+Clone this repository with Git into an ordinary folder (the green **Code** button on its page
+shows the address). Keep it as a Git clone: updating later uses `git pull`.
+
 Run this in a terminal in the project folder:
 
 ```powershell

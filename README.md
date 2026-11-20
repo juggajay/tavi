@@ -104,7 +104,9 @@ subscription allows; Tavi cannot promise a model or a limit stays as it is today
 
 ## Install
 
-One command does it, and it is safe to run again at any point:
+Get the code with Git (the green **Code** button on this repository's page shows the address to
+clone), into an ordinary folder you can write to, and open a terminal in that folder. Then one
+command does the rest, and it is safe to run again at any point:
 
 ```powershell
 node scripts/tavi.mjs setup --check    # only looks, changes nothing
