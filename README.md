@@ -1,5 +1,7 @@
 # Tavi
 
+![Tavi: your own small team](docs/pictures/brand/banner-dark.png)
+
 Tavi is a personal AI system that runs on your own Windows PC. You talk to a main bot. It gets to
 know you, keeps track of things for you, and can hand separate jobs to other bots, each with its
 own name, face, colour and, if you want, its own computer that you can watch and take over. You use

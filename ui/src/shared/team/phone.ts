@@ -1,3 +1,4 @@
+import "../brand/browser";
 import "./team.css";
 import type { Bot, Row, Live, SafetyLevel } from "../../../../src/hq/contract";
 import type { Item, Approval, ClientMessage } from "../../../../src/shared/protocol";

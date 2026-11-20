@@ -1,6 +1,6 @@
 .team{--team-top:calc(env(safe-area-inset-top,0px) + 72px)}
 .team [hidden],.team-on [hidden]{display:none!important}
-.team-on{--bg:#0c0e10;--raised:#15181b;--sunk:#1a1e21;--ink:#eef0ed;--ink-2:#b6bcb8;--ink-3:#929a96;--line:#252a2d;--line-2:#343a3d;--scrim:rgba(0,0,0,.58);--warn-soft:rgba(227,176,75,.14);--bad-soft:rgba(240,122,106,.14);--bad:#f07a6a;--spot:rgba(140,155,162,.10);--floor:#060708;color-scheme:dark}
+.team-on{--spot:#92888c12;--floor:var(--desk);color-scheme:inherit}
 .team-on .pins{display:none!important}
 .team-on .work{display:none!important}
 .team-on .stage{padding:calc(env(safe-area-inset-top,0px) + 70px) 28px calc(env(safe-area-inset-bottom,0px) + 100px);gap:16px}
@@ -152,3 +152,11 @@
  :root[data-theme="dark"] .team-first-conversation { background:#101214; color:#edf0f3; }
  .team-on:has(> .team-first-conversation) .team-top nav { visibility:hidden; }
  :root[data-theme="light"] .team-on:has(> .team-first-conversation) .team-top { --ink:#233043; --ink-2:#536173; --ink-3:#536173; }
+
+/* Surfaces and actions follow the same warm palette in both apps. */
+.team-on .team-primary,.team-on .team-compose button{background:var(--accent);color:var(--on-accent);}
+.team-on .team-message.team-you{background:var(--hover);color:var(--ink);}
+.team-on input[type=checkbox]{accent-color:var(--accent);}
+.team-on .c-peye{fill:#FFF1DF;}
+.team-first-conversation,.team-on:has(> .team-first-conversation) .team-top{background:var(--bg)!important;color:var(--ink)!important;}
+.team-on .team-first-conversation{--ink:inherit;--ink-2:inherit;--ink-3:inherit;}

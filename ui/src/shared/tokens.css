@@ -1,34 +1,4 @@
-/* Tavi v2 tokens, ported unchanged from mockups/v2/src/shared.css (DESIGN §2.1).
-   The accent follows Pebble's colour of the day: palette.ts sets the --d-* and --peb-* properties on :root. */
-:root{
-  --bg:#F3F4F2; --raised:#FFFFFF; --sunk:#E9EBE7; --hover:#E2E5E0;
-  --ink:#0C0F11; --ink-2:#3B423F; --ink-3:#646B67; --line:#D8DBD5; --line-2:#C2C7C0;
-  --accent:var(--d-accent-l,#D65918); --accent-ink:var(--d-ink-l,#B64C14); --on-accent:var(--d-on-l,#160E08); --accent-soft:var(--d-soft-l,rgba(232,97,26,.13)); --ring:var(--d-ring,#D65918);
-  --ok:#17703F; --ok-soft:rgba(23,112,63,.12); --warn:#8A5A06; --warn-soft:rgba(196,138,22,.16); --bad:#AE321C; --bad-soft:rgba(174,50,28,.11);
-  --paper:#FFFFFF; --paper-ink:#1B1F23; --paper-2:#5E656C; --paper-fill:#EEF0F1; --desk:#DCDFDA;
-  --pebble-1:var(--peb-1,#FFC08F); --pebble-2:var(--peb-2,#E8611A); --pebble-eye:#1A120C;
-  --shadow:rgba(18,24,22,.16); --scrim:rgba(12,15,17,.32);
-  --f-ui:"Geist",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --f-mono:"Geist Mono",ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
-  --ease:cubic-bezier(.32,.72,0,1); --ease-out:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.36,.64,1);
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0C0E10; --raised:#15181B; --sunk:#1A1E21; --hover:#22272A;
-  --ink:#EEF0ED; --ink-2:#B6BCB8; --ink-3:#848C88; --line:#252A2D; --line-2:#343A3D;
-  --accent:var(--d-accent-d,#ED7634); --accent-ink:var(--d-ink-d,#F08243); --on-accent:var(--d-on-d,#160E08); --accent-soft:var(--d-soft-d,rgba(237,118,52,.16));
-  --ok:#5CC28A; --ok-soft:rgba(92,194,138,.14); --warn:#E3B04B; --warn-soft:rgba(227,176,75,.14); --bad:#F07A6A; --bad-soft:rgba(240,122,106,.14);
-  --paper:#E5E6E2; --paper-ink:#15181B; --paper-2:#555C62; --paper-fill:#D6D9DA; --desk:#060708;
-  --shadow:rgba(0,0,0,.55); --scrim:rgba(0,0,0,.5);
-  color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --bg:#0C0E10; --raised:#15181B; --sunk:#1A1E21; --hover:#22272A;
-  --ink:#EEF0ED; --ink-2:#B6BCB8; --ink-3:#848C88; --line:#252A2D; --line-2:#343A3D;
-  --accent:var(--d-accent-d,#ED7634); --accent-ink:var(--d-ink-d,#F08243); --on-accent:var(--d-on-d,#160E08); --accent-soft:var(--d-soft-d,rgba(237,118,52,.16));
-  --ok:#5CC28A; --ok-soft:rgba(92,194,138,.14); --warn:#E3B04B; --warn-soft:rgba(227,176,75,.14); --bad:#F07A6A; --bad-soft:rgba(240,122,106,.14);
-  --paper:#E5E6E2; --paper-ink:#15181B; --paper-2:#555C62; --paper-fill:#D6D9DA; --desk:#060708;
-  --shadow:rgba(0,0,0,.55); --scrim:rgba(0,0,0,.5);
-  color-scheme:dark;
-}
-:root[data-theme="light"]{color-scheme:light}
-
+/* The colours shared by both apps. */
+:root:root:root{--brand-orange:#E96324;--brand-green:#209864;--brand-blue:#2876C8;--brand-charcoal:#17181D;--brand-stone:#F4E7D9;--f-ui:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;--f-mono:"Geist Mono",ui-monospace,Consolas,monospace;--ease:cubic-bezier(.32,.72,0,1);--ease-out:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.36,.64,1);--pebble-1:var(--peb-1,#FFB15A);--pebble-2:var(--peb-2,#E96324);--pebble-eye:#FFF1DF;--shadow:#14121825;--scrim:#14121880;--bg:#F5EEE5;--raised:#FFFAF4;--sunk:#EDE4DA;--hover:#E4D8CC;--pressed:#D9CABE;--ink:#27252B;--ink-2:#514C49;--ink-3:#62564F;--line:#C9BBB0;--line-2:#85766D;--accent:#B74717;--accent-ink:#A63B10;--accent-hover:#A23D11;--accent-pressed:#8F330D;--on-accent:#FFF7EF;--accent-soft:#F2D8C7;--ring:#A63B10;--ok:#216744;--ok-soft:#DCEBDD;--warn:#755409;--warn-soft:#F4E6BC;--bad:#B02C43;--bad-soft:#F6DDE2;--paper:#FFFAF4;--paper-ink:#27252B;--paper-2:#62564F;--paper-fill:#EDE4DA;--desk:#E4D8CC;--color-bg-chrome:var(--bg);--color-bg-sidebar:var(--sunk);--color-bg-pane:var(--raised);--color-bg-active:var(--accent-soft);--color-bg-tertiary:var(--hover);--color-bg-elevated:var(--raised);--color-bg-elevated-hover:var(--hover);--color-bg-hover:var(--hover);--color-bg-secondary-hover:var(--hover);--color-bg-secondary-active:var(--pressed);--color-bg-active-solid:var(--hover);--color-bg-subtle:var(--sunk);--color-bg-primary-disabled:var(--pressed);--color-text-primary:var(--ink);--color-text-secondary:var(--ink-2);--color-text-tertiary:var(--ink-3);--color-text-quaternary:var(--ink-3);--color-icon-secondary:var(--ink-2);--color-ink:var(--ink);--color-border-primary:var(--line-2);--color-border-secondary:var(--line);--color-border-tertiary:var(--line);--color-border-focus:var(--ring);--color-primary:var(--accent);--color-on-primary:var(--on-accent);--color-bg-primary-hover:var(--accent-hover);--color-bubble-agent:var(--hover);--color-bubble-user:var(--accent);--color-danger:var(--bad);--color-danger-text:var(--bad);--color-danger-hover:var(--bad);--color-danger-bg:var(--bad-soft);--color-warn:var(--warn);--color-warn-text:var(--warn);--color-warn-bg:var(--warn-soft);--color-success:var(--ok);--color-success-text:var(--ok);--color-success-bg:var(--ok-soft);--bot-on-action:var(--on-accent);color-scheme:light;}
+@media(prefers-color-scheme:dark){:root:root:root:not([data-theme="light"]){--bg:#17181D;--raised:#202127;--sunk:#131419;--hover:#34343B;--pressed:#3D3A41;--ink:#F4E7D9;--ink-2:#D0C3B8;--ink-3:#B6ABA2;--line:#49454A;--line-2:#92888C;--accent:#F78A4F;--accent-ink:#FFA16E;--accent-hover:#FFA16E;--accent-pressed:#EC7435;--on-accent:#211D1B;--accent-soft:#443025;--ring:#FFA16E;--ok:#83D3A2;--ok-soft:#253A2E;--warn:#F0CE7D;--warn-soft:#3C3421;--bad:#FFA0B1;--bad-soft:#432832;--paper:#EDE4DA;--paper-ink:#27252B;--paper-2:#62564F;--paper-fill:#D9CABE;--desk:#101115;color-scheme:dark;}}
+:root:root:root[data-theme="dark"]{--bg:#17181D;--raised:#202127;--sunk:#131419;--hover:#34343B;--pressed:#3D3A41;--ink:#F4E7D9;--ink-2:#D0C3B8;--ink-3:#B6ABA2;--line:#49454A;--line-2:#92888C;--accent:#F78A4F;--accent-ink:#FFA16E;--accent-hover:#FFA16E;--accent-pressed:#EC7435;--on-accent:#211D1B;--accent-soft:#443025;--ring:#FFA16E;--ok:#83D3A2;--ok-soft:#253A2E;--warn:#F0CE7D;--warn-soft:#3C3421;--bad:#FFA0B1;--bad-soft:#432832;--paper:#EDE4DA;--paper-ink:#27252B;--paper-2:#62564F;--paper-fill:#D9CABE;--desk:#101115;color-scheme:dark;}

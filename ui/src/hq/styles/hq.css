@@ -114,10 +114,10 @@ legend { font-size:13px; }
 .shape-picker button:hover { background:var(--hover); }
 .look-picker .shape-picker { margin-top:10px; grid-template-columns:repeat(auto-fit,minmax(64px,1fr)); }
 .look-picker .shape-picker button { min-height:70px; gap:3px; line-height:14px; }
-.look-picker .shape-picker button[aria-pressed="true"] { background:var(--hover); box-shadow:inset 0 0 0 1px var(--ink); }
+.look-picker .shape-picker button[aria-pressed="true"] { background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--ring); }
 .colour-picker { display:flex; gap:10px; flex-wrap:wrap; }
 .colour-picker button { width:28px; height:28px; border-radius:50%; }
-.colour-picker button[aria-pressed="true"] { outline:2px solid var(--ink); outline-offset:3px; }
+.colour-picker button[aria-pressed="true"] { outline:2px solid var(--ring); outline-offset:3px; }
 .check-label { flex-direction:row; align-items:center; gap:10px; }
 .item-viewer { display:flex; flex-direction:column; width:clamp(360px,40vw,680px); min-width:0; border-left:1px solid var(--line); background:var(--raised); animation:slideIn 200ms var(--ease-out); }
 .item-viewer > header { padding:12px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; border-bottom:1px solid var(--line); }
@@ -503,16 +503,6 @@ label.check-label { flex-direction:row; }
 
 /* Sizes from the reference's shell.css and chat.css. Its supplied wide pictures show these at 10/9 scale. */
 .chat, .sidebar { --reference-scale:1; }
-.chat, .sidebar {
-  --color-ink:#000000; --color-text-secondary:#1C1C1CAD; --color-text-tertiary:#1C1C1C8F;
-  --color-text-quaternary:#1C1C1C66; --color-border-secondary:#1C1C1C1F; --color-border-tertiary:#1C1C1C14;
-  --color-warn-text:#AA6300; --color-warn-bg:#F5931217;
-}
-:root[data-theme="dark"] :is(.chat, .sidebar) {
-  --color-ink:#F5F5F5; --color-text-secondary:#F5F5F5A8; --color-text-tertiary:#F5F5F58A;
-  --color-text-quaternary:#F5F5F561; --color-border-secondary:#F5F5F51A; --color-border-tertiary:#F5F5F50F;
-  --color-warn-text:#E28600; --color-warn-bg:#F694121F;
-}
 .pinned__tile { width:95px; padding:6px 8px 4px; border-radius:12px; gap:6px; }
 .pinned__text { gap:0; }
 .pinned__text .bot-row__preview { font-size:13px; line-height:18px; }
@@ -570,3 +560,28 @@ aside.details .details__top { padding-right:calc(12px + var(--window-buttons)); 
 /* In the installed program the panel's own close button sits beside its gear, so the corner holds only Windows' buttons. */
 .is-windowed .details__top { justify-content:flex-start; padding-right:12px; }
 .is-windowed aside.details .details__gear { margin-right:8px; }
+
+/* Keep the same accent when a different bot is selected. */
+:root:root:root{--color-bg-chrome:var(--bg);--color-bg-sidebar:var(--sunk);--color-bg-pane:var(--raised);--color-bg-active:var(--accent-soft);--color-bg-tertiary:var(--hover);--color-bg-elevated:var(--raised);--color-bg-elevated-hover:var(--hover);--color-bg-hover:var(--hover);--color-bg-secondary-hover:var(--hover);--color-bg-secondary-active:var(--pressed);--color-bg-active-solid:var(--hover);--color-bg-subtle:var(--sunk);--color-bg-primary-disabled:var(--pressed);--color-text-primary:var(--ink);--color-text-secondary:var(--ink-2);--color-text-tertiary:var(--ink-3);--color-text-quaternary:var(--ink-3);--color-icon-secondary:var(--ink-2);--color-ink:var(--ink);--color-border-primary:var(--line-2);--color-border-secondary:var(--line);--color-border-tertiary:var(--line);--color-border-focus:var(--ring);--color-primary:var(--accent);--color-on-primary:var(--on-accent);--color-bg-primary-hover:var(--accent-hover);--color-bubble-agent:var(--hover);--color-bubble-user:var(--accent);--color-danger:var(--bad);--color-danger-text:var(--bad);--color-danger-hover:var(--bad);--color-danger-bg:var(--bad-soft);--color-warn:var(--warn);--color-warn-text:var(--warn);--color-warn-bg:var(--warn-soft);--color-success:var(--ok);--color-success-text:var(--ok);--color-success-bg:var(--ok-soft);--bot-on-action:var(--on-accent);}
+/* Buttons and Send are the one brand orange. Your own messages keep the colour of the bot you are talking to. */
+.hq-window{--bot-action:var(--accent)!important;--bot-action-hover:var(--accent-hover)!important;--bot-on-action:var(--on-accent)!important;}
+.bubble.is-user{color:#FFFFFF;background:var(--bot-bubble,var(--accent));}
+.composer__cta,.btn--primary{background:var(--accent);color:var(--on-accent);}
+.composer__cta:hover,.btn--primary:hover{background:var(--accent-hover);}
+.composer__cta:active,.btn--primary:active{background:var(--accent-pressed);}
+.thinking__bubble{background:var(--hover);border:1px solid var(--line-2);}
+.thinking__name{color:var(--ink);}.thinking__status{color:var(--ink-2);}
+.typing-dots{color:var(--ink-2);background:var(--hover);border-radius:18px;}
+.sidebar__footer .account__name{font-size:0;display:flex;align-items:center;gap:6px;}
+.sidebar__footer .account__name:not(:empty)::before{content:"";width:34px;height:23px;background:url("../../shared/brand/mark.svg") center/contain no-repeat;}
+.sidebar__footer .account__name:not(:empty)::after{content:"";width:55px;height:21px;background:var(--ink);mask:url("../../shared/brand/wordmark.svg") center/contain no-repeat;}
+.brand-wordmark{filter:brightness(0);}:root[data-theme="dark"] .brand-wordmark{filter:none;}
+.welcome--hello .welcome-art img{width:112px;height:112px;object-fit:contain;}
+
+.thinking__pill{background:var(--hover);box-shadow:0 0 0 1px var(--line);}
+.bubble.is-streaming{background:var(--hover);color:var(--ink);}
+.bubble.is-streaming::after{color:var(--ink-2);}
+
+.bubble a,.link-btn{color:var(--accent-ink);}
+.link-btn:hover:not(:disabled){color:var(--accent-ink);}
+.bubble.is-agent{background:var(--hover);}
