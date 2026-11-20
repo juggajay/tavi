@@ -1,0 +1,19 @@
+/* Sheet viewer (from mockups/v2/src/shared.css "Sheet viewer"). No SVG filters on anything that zooms (DESIGN §8). */
+.sv{position:relative;overflow:hidden;touch-action:none;background:var(--desk);-webkit-user-select:none;user-select:none;cursor:grab;-webkit-touch-callout:none}
+.sv.grabbing{cursor:grabbing}
+.sv > svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.sheet-paper{fill:var(--paper)}
+.sv image{image-rendering:auto}
+.sv-tiles image{transition:opacity .18s linear}
+/* In dark mode the white paper is dimmed a little, as in the mockup's --paper. An overlay, not a filter. */
+.sv-dim{fill:#000;opacity:0;pointer-events:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sv-dim{opacity:.1}}
+:root[data-theme="dark"] .sv-dim{opacity:.1}
+.sv-marks{pointer-events:none}
+.sv-ring{pointer-events:none}
+.sv-ring .r1{fill:none;stroke:var(--ring);stroke-width:3;vector-effect:non-scaling-stroke}
+.sv-ring .r2{fill:none;stroke:var(--ring);stroke-width:2;vector-effect:non-scaling-stroke;transform-box:fill-box;transform-origin:center;animation:svpulse 1.8s var(--ease-out) infinite}
+.sv-ring .r0{fill:var(--ring);fill-opacity:.08}
+@keyframes svpulse{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.14);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sv-ring .r2{animation:none;opacity:0}}
+.sv-missing{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;font:500 15px/1.4 var(--f-ui);color:var(--ink-2);background:color-mix(in srgb,var(--bg) 70%,transparent);pointer-events:none}

@@ -1,0 +1,59 @@
+/* The round table on the phone (Stage 17.3): Pebble and Tim side by side, the conversation under them. Only while one is
+   on; the stage's own Pebble, subtitle, pins and work line step aside for it and come back when it ends. */
+.app.table .stage > .char-btn,.app.table .stage > .sub,.app.table .stage > .pins,.app.table .stage > .work{opacity:0;visibility:hidden;transform:scale(.94);transition:opacity .3s var(--ease),transform .42s var(--ease),visibility 0s linear .3s}
+/* (only while a round table is going away: Pebble comes back to the middle) */
+.app.untable .stage > .char-btn,.app.untable .stage > .sub{transition:opacity .42s var(--ease-out) .12s,transform .5s var(--ease) .12s}
+
+.tbl{position:absolute;inset:0;z-index:1;display:grid;grid-template-rows:auto auto minmax(0,1fr);padding:calc(var(--sat) + 12px) calc(var(--sar) + 18px) calc(var(--sab) + 70px) calc(var(--sal) + 18px);opacity:0;transition:opacity .42s var(--ease-out)}
+.tbl[hidden]{display:none}
+.tbl.in{opacity:1}
+
+.tbl-top{position:relative;display:flex;align-items:center;justify-content:center;height:34px}
+.tbl-tag{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-2);white-space:nowrap}
+.tbl-tag i{position:relative;width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.tbl-tag i::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1.5px solid var(--accent);opacity:0;animation:breathe 2.6s var(--ease-out) infinite}
+.tbl-end{position:absolute;right:-8px;top:0;height:34px;padding:0 13px;border-radius:999px;font:500 14px/34px var(--f-ui);color:var(--ink-3);transition:color .2s,background-color .2s}
+.tbl-end:hover{color:var(--ink)}
+.tbl-end:active{background:var(--sunk)}
+
+.tbl-cast{display:flex;justify-content:center;align-items:flex-end;gap:clamp(6px,5cqw,30px);margin-top:clamp(4px,1.8cqh,20px)}
+.tbl-seat{display:flex;flex-direction:column;align-items:center;gap:4px;width:min(36cqw,19cqh,156px);border-radius:28px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tbl-seat .char-host{width:100%;height:auto;aspect-ratio:200/186}
+.tbl-name{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--ink-3);transition:color .3s var(--ease)}
+.tbl-name::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0;transform:scale(.4);transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.tbl[data-speaking="pebble"] .peb .tbl-name,.tbl[data-thinking="pebble"] .peb .tbl-name{color:var(--accent-ink)}
+.tbl[data-speaking="guest"] .tim .tbl-name,.tbl[data-thinking="guest"] .tim .tbl-name{color:var(--tim-ink)}
+.tbl[data-speaking="pebble"] .peb .tbl-name::before,.tbl[data-speaking="guest"] .tim .tbl-name::before{opacity:1;transform:none}
+.tbl[data-thinking="pebble"] .peb .tbl-name::before,.tbl[data-thinking="guest"] .tim .tbl-name::before{opacity:1;transform:none;animation:dotpulse 1.4s var(--ease) infinite}
+@keyframes dotpulse{50%{opacity:.3}}
+/* coming in: Tim pulls up a chair beside Pebble */
+.tbl .peb{transform:scale(1.1);transition:transform .55s var(--ease)}
+.tbl .tim{opacity:0;transform:translateX(22px);transition:opacity .45s var(--ease-out) .14s,transform .6s var(--ease) .14s}
+.tbl.in .peb,.tbl.in .tim{opacity:1;transform:none}
+
+/* the conversation grows down from under them; once it's full it keeps the newest in view (he can scroll back up), and
+   only then does the top fade, so nothing sits half-faded right under their names */
+.tbl-log{display:flex;flex-direction:column;gap:14px;min-height:0;margin-top:clamp(10px,2.4cqh,22px);padding:10px 2px 12px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;scroll-behavior:smooth}
+.tbl-log::-webkit-scrollbar{display:none}
+.tbl-log.faded{-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 84px);mask-image:linear-gradient(to bottom,transparent 0,#000 84px)}
+.tl{flex:none;display:flex;flex-direction:column;gap:3px;max-width:30em}
+.tl b{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.tl p{margin:0;font-size:17px;line-height:1.42;color:var(--ink-2);text-wrap:pretty;transition:color .3s var(--ease)}
+.tl.peb,.tl.tim{padding-left:12px;border-left:2px solid var(--rule,var(--line-2))}
+.tl.peb{--rule:color-mix(in srgb,var(--pebble-2) 60%,transparent)}
+.tl.tim{--rule:color-mix(in srgb,var(--tim-2) 60%,transparent)}
+.tl.peb b{color:var(--accent-ink)}
+.tl.tim b{color:var(--tim-ink)}
+.tl.you{align-self:flex-end;align-items:flex-end;text-align:right;max-width:86%}
+.tl.you p{color:var(--ink-3)}
+.tl.now p,.tl:last-child:not(.you) p{color:var(--ink)}
+.tl.brief{padding:10px 13px;border-radius:14px;background:var(--sunk);max-width:none}
+.tl.brief p{font-size:14.5px;line-height:1.45;color:var(--ink-2)}
+.tl.think{border-left-style:dashed}
+.tl.think p{font-size:16px}
+.tl.new{animation:tlin .42s var(--ease-out) both}
+@keyframes tlin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* short phones: the characters a little smaller, the words a touch smaller */
+@container (max-height: 700px){.tbl-seat{width:min(32cqw,17cqh,130px)}.tl p{font-size:16px}}
+@media (prefers-reduced-motion: reduce){.tbl,.tbl .peb,.tbl .tim,.app.untable .stage > .char-btn,.app.untable .stage > .sub{transition:none}.tl.new{animation:none}}

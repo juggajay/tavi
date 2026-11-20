@@ -1,0 +1,63 @@
+.welcome-shell { height:100dvh; overflow:auto; background:var(--color-bg-chrome); color:var(--color-text-primary); }
+.welcome-app { display:block; height:auto; min-height:calc(100dvh - 76px); overflow:visible; }
+.welcome-top { min-height:76px; display:flex; align-items:center; justify-content:space-between; padding:18px 36px; border-bottom:1px solid var(--color-border-tertiary); }
+.welcome-top > span { font-size:19px; font-weight:600; letter-spacing:-.5px; }
+.welcome { width:min(900px, calc(100% - 72px)); margin:76px auto 32px; display:grid; grid-template-columns:140px minmax(0, 1fr); gap:42px; align-items:start; }
+.welcome-art { display:flex; justify-content:center; padding-top:31px; }
+.welcome-copy { max-width:650px; }
+.welcome h1 { font-size:34px; line-height:1.18; font-weight:600; letter-spacing:-1.1px; margin:10px 0 20px; outline:none; }
+.welcome p { font-size:15px; line-height:1.65; color:var(--color-text-secondary); margin:12px 0; }
+.welcome p.welcome-kicker { font-size:12px; font-weight:500; color:var(--color-text-tertiary); letter-spacing:.07em; text-transform:uppercase; margin:0; }
+.welcome-note { margin:26px 0; padding:22px 24px; border-radius:16px; border:1px solid var(--color-border-secondary); background:var(--color-bg-pane); }
+.welcome-note b { font-size:14px; font-weight:600; }
+.welcome-note p { font-size:14px; margin:10px 0 0; }
+.welcome .welcome-hint { font-size:13px; }
+.welcome-label { display:block; margin:20px 0; font-size:13px; font-weight:500; max-width:360px; }
+.welcome-label input { display:block; width:100%; margin-top:9px; }
+.welcome-actions { display:flex; align-items:center; gap:22px; margin-top:32px; }
+.welcome-actions .btn { min-height:43px; padding:0 24px; }
+.welcome p.welcome-saved { font-size:12px; color:var(--color-text-tertiary); margin-top:25px; }
+.welcome-face { margin:24px 0; }
+.welcome-face summary { cursor:pointer; font-size:14px; }
+.welcome .look-picker { margin-top:16px; }
+.welcome .shape-picker { max-height:230px; overflow:auto; }
+.welcome--subscription { margin-top:42px; grid-template-columns:100px minmax(0, 1fr); width:min(1040px, calc(100% - 72px)); gap:30px; }
+.welcome--subscription .welcome-copy { max-width:850px; }
+.welcome .subscriptions-page { padding:0; margin:24px 0 0; overflow:visible; height:auto; }
+.welcome .subscriptions-page > header { display:none; }
+.welcome .subscription-cards { gap:16px; }
+.welcome .subscription-card { padding:22px; }
+.welcome-address { overflow-wrap:anywhere; user-select:text; }
+.onboarding-conversation { border-bottom:1px solid var(--color-border-secondary); padding:16px 28px; background:var(--color-bg-pane); font-size:13px; }
+.onboarding-conversation > div:first-child { display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; }
+.onboarding-conversation span { color:var(--color-text-secondary); }
+.onboarding-conversation-actions { display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:10px; }
+.onboarding-conversation .link-btn { font-size:12px; }
+.onboarding-material { padding:20px 0 4px; max-width:680px; }
+.onboarding-material label { display:block; }
+.onboarding-material textarea { display:block; width:100%; min-height:130px; margin-top:10px; padding:12px; background:var(--color-bg-chrome); color:inherit; border:1px solid var(--color-border-secondary); border-radius:12px; resize:vertical; }
+.onboarding-material p { line-height:1.5; color:var(--color-text-secondary); }
+.onboarding-file input { display:block; margin-top:10px; }
+.work-area:has(> .onboarding-conversation) { flex-direction:column; }
+.work-area:has(> .onboarding-conversation) > .chat { flex:1; min-height:0; }
+@media(max-width:650px) {
+  .welcome-top { min-height:64px; padding:12px 22px; }
+  .welcome, .welcome--subscription { display:block; width:auto; margin:28px 24px; }
+  .welcome-art { justify-content:flex-start; padding:0; margin:0 0 20px -5px; }
+  .welcome-art .bot-avatar { width:64px!important; height:64px!important; }
+  .welcome-art svg { width:64px; height:64px; }
+  .welcome h1 { font-size:29px; }
+  .welcome-note { padding:18px; margin:22px 0; }
+  .welcome .subscription-cards { grid-template-columns:1fr; }
+  .welcome--subscription .welcome-art { display:none; }
+  .welcome--subscription .subscription-card { padding:14px 18px; }
+  .welcome--subscription .subscription-card h2 { margin:0 0 7px; font-size:17px; }
+  .welcome--subscription .subscription-card p { margin:5px 0; }
+  .welcome--subscription .subscription-card > small,
+  .welcome--subscription .subscription-models,
+  .welcome--subscription .subscription-card > .quiet { display:none; }
+  .welcome--subscription .subscription-card .button-row { margin-top:12px; }
+  .welcome--subscription .subscription-card .button-row > button:disabled { display:none; }
+  .welcome-actions { flex-wrap:wrap; gap:18px; }
+  .onboarding-conversation { padding:14px 18px; }
+}

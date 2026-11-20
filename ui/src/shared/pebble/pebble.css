@@ -1,0 +1,7 @@
+/* Pebble (from mockups/v2/src/shared.css "Characters") */
+.lh-char{display:block;width:100%;height:100%;overflow:visible}
+.lh-char .c-shadow{fill:var(--shadow)}
+.lh-char .c-accent{fill:var(--accent)}
+.lh-char .c-peye{fill:var(--pebble-eye)}
+.lh-char .c-halo{opacity:var(--peb-glow-a,0)}
+.lh-char .c-white{fill:#fff}

@@ -1,0 +1,16 @@
+{
+  "appId": "app.tavi.desktop",
+  "productName": "Tavi",
+  "extraMetadata": { "name": "tavi-desktop" },
+  "files": ["main.js", "earlier.cjs", "preload.js", "starting.html", "app-config.json", "assets/tavi.ico", "assets/tavi-off.ico"],
+  "directories": { "output": "dist-tavi" },
+  "win": { "target": "nsis", "icon": "assets/tavi.ico" },
+  "nsis": {
+    "oneClick": true,
+    "perMachine": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Tavi",
+    "runAfterFinish": false
+  }
+}

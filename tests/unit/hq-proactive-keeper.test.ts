@@ -1,0 +1,32 @@
+import "../isolate.js";
+import assert from "node:assert/strict";
+import { seedTeam } from "../../src/hq/bots.js";
+import { appendRow } from "../../src/hq/rows.js";
+import { keeperPass } from "../../src/memory/keeper.js";
+import { logConversation } from "../../src/store/log.js";
+import { db } from "../../src/store/db.js";
+import { fakeAccountProtection } from "../fake-hermes.js";
+
+process.env.LH_V3 = "1";
+fakeAccountProtection();
+seedTeam();
+appendRow("tim", 0, { kind: "message", from: "owner", text: "Specialist private example" });
+appendRow("pebble", 0, { kind: "message", from: "owner", text: "I prefer morning meetings" });
+appendRow("pebble", 0, { kind: "message", from: "bot", text: "Morning meetings it is." });
+appendRow("pebble", 0, { kind: "message", from: "owner", text: "Test-only example" }, { test: true });
+logConversation("user", "typed", "An unscoped conversation must stay out");
+let prompt = "";
+await keeperPass("test", async (p) => {
+  prompt = p;
+  const evidence = Number(/\[(\d+)\] User: I prefer morning/.exec(p)?.[1]);
+  assert.ok(evidence);
+  return { about_user: [], offers: [], settled: [], details: [{ kind: "preference", subject: "meetings", fact: "I prefer morning meetings", evidence: [evidence] }], gist: "" };
+});
+assert.match(prompt, /Morning meetings it is/);
+for (const hidden of ["Specialist private example", "Test-only example", "An unscoped conversation"]) assert.ok(!prompt.includes(hidden));
+const saved = db.prepare("SELECT scope FROM memories WHERE subject='meetings'").get();
+assert.equal(saved?.scope, "lead");
+let repeated = false;
+await keeperPass("again", async () => { repeated = true; return undefined; });
+assert.equal(repeated, false);
+console.log("hq-proactive-keeper: lead conversation only, lead notebook and saved place passed");

@@ -1,0 +1,30 @@
+/* The sketch pad (Stage 8.5 Part B). The paper is always white with dark ink whatever the theme (the picture the model
+   sees is always the same); only the control bar follows the theme. Controls are as large as the other phone buttons. */
+.pad{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:#FFFFFF;opacity:0;transition:opacity .22s var(--ease-out);touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.pad.in{opacity:1}
+.pad.over{background:#0B0D0E}
+.pad-c{flex:1;min-height:0;width:100%;display:block;touch-action:none;cursor:crosshair}
+.pad-q{position:absolute;left:calc(env(safe-area-inset-left,0px) + 20px);right:calc(env(safe-area-inset-right,0px) + 20px);top:calc(env(safe-area-inset-top,0px) + 14px);margin:0;text-align:center;font:500 15px/1.35 var(--f-ui);color:#3B423F;pointer-events:none;transition:opacity .5s var(--ease-out)}
+.pad.over .pad-q{color:#FFFFFF;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.pad.drawing .pad-q{opacity:0}
+.pad-msg{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);margin:0 auto;max-width:360px;padding:10px 14px;border-radius:12px;text-align:center;font:500 14.5px/1.35 var(--f-ui);color:var(--ink);background:var(--raised);box-shadow:0 0 0 1px var(--line-2),0 10px 26px -12px var(--shadow)}
+.pad-msg[hidden]{display:none}
+.pad-bar{flex:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px calc(env(safe-area-inset-right,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 12px) calc(env(safe-area-inset-left,0px) + 16px);background:var(--raised);box-shadow:0 -1px 0 var(--line)}
+.pad-bar button{width:48px;height:48px;border:0;border-radius:15px;display:grid;place-items:center;background:transparent;color:var(--ink-2);cursor:pointer;position:relative}
+.pad-bar button:active{background:var(--hover)}
+.pad-bar button svg{width:22px;height:22px}
+.pad-bar .ink i{width:24px;height:24px;border-radius:50%;background:#15181B;box-shadow:0 0 0 2px var(--raised),0 0 0 3.5px var(--line-2)}
+.pad-bar .ink[data-ink="red"] i{background:#D7261E}
+.pad-bar .send{background:var(--ink);color:var(--bg)}
+.pad-bar .send .ring{position:absolute;inset:4px;width:40px;height:40px;opacity:0;transform:rotate(-90deg)}
+.pad-bar .send .ring circle{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:100.5;stroke-dashoffset:75;stroke-linecap:round}
+.pad.sending .send .ring{opacity:1;animation:padspin .9s linear infinite}
+.pad.sending .send > svg:first-child{opacity:.35}
+@keyframes padspin{to{transform:rotate(270deg)}}
+.pad-ask{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);margin:0 auto;max-width:340px;padding:16px;border-radius:16px;background:var(--raised);box-shadow:0 0 0 1px var(--line-2),0 18px 40px -16px var(--shadow);text-align:center}
+.pad-ask[hidden]{display:none}
+.pad-ask p{margin:0 0 12px;font:600 16px var(--f-ui);color:var(--ink)}
+.pad-ask div{display:flex;gap:10px;justify-content:center}
+.pad-ask button{min-height:44px;padding:0 18px;border-radius:13px;border:0;font:500 15px var(--f-ui);background:var(--sunk);color:var(--ink);cursor:pointer}
+.pad-ask button.danger{background:var(--bad);color:#fff}
+@media (prefers-reduced-motion:reduce){.pad{transition:none}.pad.sending .send .ring{animation:none}}

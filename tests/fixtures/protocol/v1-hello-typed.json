@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Tavi",
+    "notice": null,
+    "type": "hello",
+    "voiceReady": false
+  },
+  {
+    "approval": {
+      "account": "Work email",
+      "body": "Hi Ruvo,\n\nCould you send the window sizes for Sample House by Thursday? The frame is going up next week.\n\nThanks,\nNemi",
+      "cc": [],
+      "expires_at": "<expires_at>",
+      "id": "<id>",
+      "kind": "email",
+      "nonce": "<nonce>",
+      "operation": "email.send",
+      "subject": "Window sizes for Sample House",
+      "to": [
+        "ruvo@example.com"
+      ]
+    },
+    "type": "approval"
+  },
+  {
+    "label": "Working on it",
+    "phase": "thinking",
+    "source": "typed",
+    "type": "brain"
+  },
+  {
+    "label": "Thinking",
+    "phase": "thinking",
+    "source": "typed",
+    "type": "brain"
+  },
+  {
+    "card": null,
+    "phase": "done",
+    "source": "typed",
+    "spoken": "You said: hello",
+    "type": "brain"
+  }
+]

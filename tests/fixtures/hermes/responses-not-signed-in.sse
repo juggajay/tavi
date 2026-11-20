@@ -1,0 +1,18 @@
+event: response.created
+data: {"type": "response.created", "response": {"id": "resp_99c04f617afe47bdbcd522623d8e", "object": "response", "status": "in_progress", "created_at": 1794989833, "model": "hermes-agent", "output": []}, "sequence_number": 0}
+
+event: response.output_item.added
+data: {"type": "response.output_item.added", "output_index": 0, "item": {"id": "msg_6b93e78aa376e8a601871dbe", "type": "message", "status": "in_progress", "role": "assistant", "content": []}, "sequence_number": 1}
+
+event: response.output_text.delta
+data: {"type": "response.output_text.delta", "item_id": "msg_6b93e78aa376e8a601871dbe", "output_index": 0, "content_index": 0, "delta": "\u26a0\ufe0f I couldn't connect to the AI model service, so this message wasn't processed. Use /login to sign in again, or /model to pick a different model. If it keeps failing, run `hermes doctor` on the host.", "logprobs": [], "sequence_number": 2}
+
+event: response.output_text.done
+data: {"type": "response.output_text.done", "item_id": "msg_6b93e78aa376e8a601871dbe", "output_index": 0, "content_index": 0, "text": "\u26a0\ufe0f I couldn't connect to the AI model service, so this message wasn't processed. Use /login to sign in again, or /model to pick a different model. If it keeps failing, run `hermes doctor` on the host.", "logprobs": [], "sequence_number": 3}
+
+event: response.output_item.done
+data: {"type": "response.output_item.done", "output_index": 0, "item": {"id": "msg_6b93e78aa376e8a601871dbe", "type": "message", "status": "completed", "role": "assistant", "content": [{"type": "output_text", "text": "\u26a0\ufe0f I couldn't connect to the AI model service, so this message wasn't processed. Use /login to sign in again, or /model to pick a different model. If it keeps failing, run `hermes doctor` on the host."}]}, "sequence_number": 4}
+
+event: response.failed
+data: {"type": "response.failed", "response": {"id": "resp_99c04f617afe47bdbcd522623d8e", "object": "response", "status": "failed", "created_at": 1794989833, "model": "hermes-agent", "output": [{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "\u26a0\ufe0f I couldn't connect to the AI model service, so this message wasn't processed. Use /login to sign in again, or /model to pick a different model. If it keeps failing, run `hermes doctor` on the host."}]}], "error": {"message": "No Codex credentials stored. Run `hermes auth add openai-codex --type oauth` to authenticate. Run `hermes model` to re-authenticate.", "type": "server_error"}, "usage": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}}, "sequence_number": 5}
+

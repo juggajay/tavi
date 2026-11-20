@@ -1,0 +1,26 @@
+/* A sketch the assistant drew (Stage 8.5): the app's own colour tokens, so it reads in light and dark and the
+   dimensions take the colour of the day. Stroke widths are in screen pixels (the sketch is redrawn at each zoom). */
+.sk-host{position:relative;display:flex;flex-direction:column;width:100%;height:100%;background:var(--bg);touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+.sk{display:block;flex:1;min-height:0}
+.sk-line{stroke:var(--ink);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sk-line.w1{stroke-width:1}
+.sk-line.w2{stroke-width:1.75}
+.sk-line.w3{stroke-width:2.6}
+.sk-line.dash{stroke-dasharray:7 5;stroke:var(--ink-3)}
+.sk-shape{stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.sk-nofill{fill:none}
+.sk-timber{fill:color-mix(in srgb,#D9B27A 30%,var(--raised))}
+.sk-hatch{fill:url(#sk-hatch)}
+.sk-hl{stroke:var(--ink-3);stroke-width:1}
+.sk-ext{stroke:var(--accent-ink);stroke-width:.9;opacity:.75}
+.sk-dimline,.sk-tick{stroke:var(--accent-ink);stroke-width:1.2;fill:none}
+.sk-tick{stroke-width:1.6}
+.sk-leader{stroke:var(--ink-3);stroke-width:1}
+.sk-dot{fill:var(--ink-3)}
+.sk-dimtext,.sk-label{font:600 13px var(--f-ui);paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round}
+.sk-dimtext{fill:var(--accent-ink);font-variant-numeric:tabular-nums}
+.sk-label{fill:var(--ink-2);font-weight:500}
+.sk-foot{flex:none;padding:8px 16px 12px;text-align:center}
+.sk-foot p{margin:0}
+.sk-note{font-size:14px;line-height:1.4;color:var(--ink-2);margin-bottom:4px!important}
+.sk-fixed{font-size:12px;color:var(--ink-3);letter-spacing:.01em}

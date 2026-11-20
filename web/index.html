@@ -1,0 +1,1250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tavi</title>
+<meta name="theme-color" content="#0F1113">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tavi">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap">
+<style>
+/* One screen: a real-time 3D character centre stage, one subtitle line, discreet controls top right. */
+:root{
+  --bg:#E7E9E8; --floor:#D3D7D6; --spot:rgba(255,255,255,.9); --ink:#16191B; --muted:#6B7270; --accent:#EF6A1F;
+  --chip:rgba(255,255,255,.55); --chip-line:rgba(22,25,27,.08);
+  --surface:#FBFBFA; --shell:rgba(255,255,255,.5); --shell-line:rgba(22,25,27,.07); --inner-hi:rgba(255,255,255,.9); --shadow-soft:rgba(40,48,52,.35);
+  --scrim:rgba(214,218,217,.7);
+  --grain:.05; --grain-blend:multiply;
+  --on-accent:#1B0D04;
+  --ease:cubic-bezier(.32,.72,0,1);
+  --f-ui:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0F1113; --floor:#060708; --spot:rgba(150,160,168,.17); --ink:#ECEEEC; --muted:#8E9592; --accent:#FF7A33;
+  --chip:rgba(255,255,255,.06); --chip-line:rgba(255,255,255,.08);
+  --surface:#1A1D20; --shell:rgba(255,255,255,.05); --shell-line:rgba(255,255,255,.08); --inner-hi:rgba(255,255,255,.06); --shadow-soft:rgba(0,0,0,.7);
+  --scrim:rgba(7,8,10,.7);
+  --grain:.06; --grain-blend:overlay;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;color:var(--ink);font:400 16px/1.5 var(--f-ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  background-color:var(--bg);
+  background-image:radial-gradient(58% 46% at 50% 40%,var(--spot),transparent 72%),linear-gradient(180deg,var(--bg) 0%,var(--bg) 60%,var(--floor) 100%);
+}
+button{font:inherit;color:inherit}
+.grain{position:fixed;inset:0;pointer-events:none;opacity:var(--grain);mix-blend-mode:var(--grain-blend);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+
+.app{min-height:100%;display:grid;grid-template-rows:auto auto auto;align-content:center;justify-items:center;padding-block:56px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.avatar{position:relative;width:min(92vw,60vh,600px);aspect-ratio:1;max-width:100%;border:0;background:none;padding:0;cursor:pointer;border-radius:40%;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.avatar canvas{position:relative;z-index:1;display:block;width:100%;height:100%;opacity:0;transition:opacity .9s var(--ease)}
+.ready .avatar canvas{opacity:1}
+.avatar:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.rings{position:absolute;inset:0;z-index:0;pointer-events:none}
+.rings span{position:absolute;left:50%;top:49%;width:58%;aspect-ratio:1;border-radius:50%;border:2px solid var(--accent);opacity:0;transform:translate(-50%,-50%) scale(.8)}
+[data-state="listening"] .rings span{animation:ring 2.1s cubic-bezier(.22,.61,.36,1) infinite}
+.rings span:nth-child(2){animation-delay:.7s}.rings span:nth-child(3){animation-delay:1.4s}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px;transition:opacity .5s var(--ease)}
+.ready .loading{opacity:0}
+
+.captions{width:100%;max-width:34ch;text-align:center;margin-top:4px;min-height:9.2em;display:grid;align-content:start;gap:10px}
+.you{font-size:15px;color:var(--muted);min-height:1.5em;text-wrap:balance}
+.say{font-size:clamp(20px,2.3vw,25px);font-weight:500;letter-spacing:-.012em;line-height:1.34;text-wrap:balance;min-height:2.7em}
+.say .w{display:inline-block;opacity:0;transform:translateY(5px);filter:blur(3px);transition:opacity .45s var(--ease),transform .45s var(--ease),filter .45s var(--ease)}
+.say .w.on{opacity:1;transform:none;filter:none}
+.think{display:inline-block;font-size:17px;font-weight:400;color:transparent;background:linear-gradient(90deg,var(--muted) 0%,var(--ink) 45%,var(--muted) 90%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;animation:shimmer 1.6s linear infinite}
+.hint{font-size:13px;color:var(--muted);letter-spacing:.02em;min-height:1.3em;transition:opacity .4s var(--ease)}
+.hint:empty{opacity:0}
+
+.controls{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:8px;z-index:2}
+.pill-btn{border:0;border-radius:999px;padding:8px 14px;background:var(--chip);box-shadow:0 0 0 1px var(--chip-line);color:var(--muted);font-size:13px;cursor:pointer;transition:color .2s var(--ease),transform .2s var(--ease)}
+.pill-btn:hover,.pill-btn[aria-expanded="true"]{color:var(--ink)}
+.pill-btn:active{transform:scale(.97)}
+.pill-btn:focus-visible,.done:focus-visible,.tb-send:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+.scrim{position:fixed;inset:0;background:linear-gradient(180deg,transparent 35%,var(--scrim) 100%);opacity:0;pointer-events:none;transition:opacity .6s var(--ease)}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateY(calc(100% + 32px));transition:transform .8s var(--ease);pointer-events:none}
+.sheet.open{transform:none}
+.sheet.open .shell{pointer-events:auto}
+.shell{width:100%;max-width:540px;padding:6px;border-radius:30px;background:var(--shell);box-shadow:0 0 0 1px var(--shell-line),0 34px 70px -24px var(--shadow-soft);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.core{border-radius:24px;overflow:hidden;background:var(--surface);box-shadow:inset 0 1px 0 var(--inner-hi)}
+.card-body{padding:18px 18px 4px}
+.card-body h3{margin:0 0 12px;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.card-body dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px 18px;font-size:15px}
+.card-body dt{color:var(--muted)}
+.card-body dd{margin:0;font-family:var(--f-mono);font-size:14px;overflow-wrap:anywhere}
+.card-body img.drawing,.appr img.drawing{display:block;width:100%;max-height:52vh;object-fit:contain;border-radius:14px;background:#fff;margin:0 0 6px;box-shadow:0 0 0 1px var(--shell-line);cursor:zoom-in}
+/* Full-screen drawing viewer: pinch / drag / double-tap, and a close button that's always reachable. */
+.viewer{position:fixed;inset:0;z-index:30;background:#0d0f10;display:none;touch-action:none;overflow:hidden;-webkit-user-select:none;user-select:none}
+.viewer.open{display:block}
+.viewer img{position:absolute;left:0;top:0;transform-origin:0 0;background:#fff;-webkit-user-drag:none;will-change:transform}
+.viewer-bar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(180deg,rgba(13,15,16,.88),rgba(13,15,16,0));color:#eceeec;font-size:14px;pointer-events:none}
+.viewer-bar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewer-x{pointer-events:auto;flex:none;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:20px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:transform .2s var(--ease)}
+.viewer-x:active{transform:scale(.94)}
+.viewer-x:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.viewer-hint{position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));text-align:center;color:rgba(236,238,236,.72);font-size:13px;pointer-events:none;transition:opacity .6s var(--ease)}
+.meta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px 12px 18px}
+.meta span{font-size:13px;color:var(--muted);min-width:0}
+.done{border:0;border-radius:999px;padding:10px 20px;background:var(--ink);color:var(--surface);font-size:14px;font-weight:500;cursor:pointer;flex:none;transition:transform .2s var(--ease)}
+.done:active{transform:scale(.97)}
+.sheet.is-approval .meta{display:none}
+.appr{padding:18px 18px 16px;display:grid;gap:12px}
+.appr h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.appr dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;font-size:15px}
+.appr dt{color:var(--muted)}
+.appr dd{margin:0;overflow-wrap:anywhere}
+.appr-body{margin:0;padding:12px 14px;border-radius:16px;background:var(--bg);font-size:15px;line-height:1.45;white-space:pre-wrap;max-height:32vh;overflow:auto}
+.appr-actions{display:flex;gap:8px;justify-content:flex-end}
+.btn-ghost{border:0;border-radius:999px;padding:11px 18px;background:transparent;box-shadow:0 0 0 1px var(--shell-line) inset;color:var(--ink);font-size:15px;cursor:pointer}
+.btn-go{border:0;border-radius:999px;padding:11px 20px;background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;cursor:pointer;transition:transform .2s var(--ease)}
+.btn-go:active{transform:scale(.97)}
+.btn-go:disabled,.btn-ghost:disabled{opacity:.5;cursor:default}
+.btn-go:focus-visible,.btn-ghost:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+.typebar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateY(calc(100% + 24px));transition:transform .6s var(--ease);pointer-events:none}
+.tb-shell{width:100%;max-width:520px;padding:5px;border-radius:999px;background:var(--shell);box-shadow:0 0 0 1px var(--shell-line),0 24px 50px -22px var(--shadow-soft);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.tb-core{display:flex;align-items:center;gap:6px;border-radius:999px;background:var(--surface);box-shadow:inset 0 1px 0 var(--inner-hi);padding:5px 5px 5px 18px;transition:box-shadow .2s var(--ease)}
+.tb-core:focus-within{box-shadow:inset 0 1px 0 var(--inner-hi),0 0 0 1.5px var(--accent)}
+.tb-core input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:400 16px var(--f-ui);padding:9px 0;outline:none}
+.tb-core input::placeholder{color:var(--muted)}
+.tb-send{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:var(--ink);color:var(--surface);font:600 17px/1 var(--f-ui);cursor:pointer;display:grid;place-items:center;transition:transform .2s var(--ease),opacity .2s var(--ease)}
+.tb-send:active{transform:scale(.94)}
+.tb-send:disabled{opacity:.3;cursor:default}
+.typing .typebar{transform:none}
+.typing .typebar .tb-shell{pointer-events:auto}
+.sheet-open .typebar{transform:translateY(calc(100% + 24px))}
+.sheet-open .typebar .tb-shell{pointer-events:none}
+
+/* While a card is open the avatar moves up and shrinks (below the pills), so the card never sits on top of it.
+   It stays live: tap it to keep talking. Its subtitles sit just under it, trimmed to three lines. */
+.sheet-open .app{align-content:start;min-height:0;padding-top:calc(62px + env(safe-area-inset-top,0px))}
+.sheet-open .avatar{width:min(36vw,22vh,190px)}
+.sheet-open .captions{min-height:0;max-width:32ch;margin-top:2px;gap:4px}
+.sheet-open .you,.sheet-open .hint{display:none}
+.sheet-open .say{font-size:16px;line-height:1.35;min-height:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.sheet-open .scrim{pointer-events:none}
+/* The card fits under the avatar and scrolls inside itself; the handle says it can be swiped away. */
+.sheet .core{display:flex;flex-direction:column;max-height:max(240px,calc(100dvh - 170px - min(36vw,22vh,190px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)))}
+#sheetArt{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.grab{display:block;flex:none;width:38px;height:5px;border-radius:999px;background:var(--muted);opacity:.35;margin:9px auto 0}
+.sheet-open .card-body img.drawing,.sheet-open .appr img.drawing{max-height:38dvh}
+/* Typing while a card is open: the bar sits under the card, and the card gets shorter to make room. */
+.sheet-open.typing .typebar{transform:none}
+.sheet-open.typing .typebar .tb-shell{pointer-events:auto}
+.sheet-open.typing .sheet{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+.sheet-open.typing .sheet .core{max-height:max(200px,calc(100dvh - 232px - min(36vw,22vh,190px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)))}
+.typing .app{padding-bottom:112px}
+
+/* Cards are kept: a small bar on each card goes to the list or flips to the one before/after; the list is grouped by day. */
+.card-nav{display:flex;align-items:center;gap:6px;margin:-6px -6px 8px 0}
+.card-nav .to-list{border:0;background:none;padding:8px 8px 8px 0;margin-right:auto;color:var(--muted);font-size:14px;cursor:pointer;border-radius:10px}
+.card-nav span{font-size:13px;color:var(--muted);white-space:nowrap}
+.card-nav .step{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:var(--bg);color:var(--ink);font:500 18px/1 var(--f-ui);cursor:pointer;display:grid;place-items:center;transition:transform .2s var(--ease),opacity .2s var(--ease)}
+.card-nav .step:active{transform:scale(.94)}
+.card-nav .step:disabled{opacity:.3;cursor:default}
+.card-nav button:focus-visible,.card-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card-body figure{margin:0 0 10px}
+.card-body figure img.drawing{margin:0}
+.card-body figcaption{font-size:13px;color:var(--muted);margin:6px 2px 0}
+.cards-list{padding:18px 10px 4px}
+.cards-list h3{margin:0 8px;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.cards-sub{margin:2px 8px 4px;font-size:14px;color:var(--muted)}
+.cards-day{margin:14px 8px 4px;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.card-row{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;text-align:left;padding:8px;border-radius:16px;cursor:pointer;transition:background-color .2s var(--ease)}
+.card-row:active{background:var(--bg)}
+.card-row .card-text{min-width:0;flex:1}
+.card-row b{display:block;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-row small{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-thumb{flex:none;width:56px;height:56px;border-radius:12px;object-fit:cover;object-position:center;background:#fff;box-shadow:0 0 0 1px var(--shell-line)}
+.card-thumb.text{display:grid;align-content:center;gap:6px;padding:0 13px;background:var(--bg)}
+.card-thumb.text i{display:block;height:3px;border-radius:2px;background:var(--muted);opacity:.45}
+.card-thumb.text i:nth-child(2){width:70%}
+.cards-empty{margin:18px 8px 10px;color:var(--muted);font-size:15px}
+.pill-btn.nudge{animation:nudge 1.2s var(--ease)}
+@keyframes nudge{0%{transform:scale(1)}30%{transform:scale(1.12);color:var(--ink);box-shadow:0 0 0 1.5px var(--accent)}100%{transform:scale(1)}}
+
+@keyframes ring{0%{opacity:.45;transform:translate(-50%,-50%) scale(.82)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.25)}}
+@keyframes shimmer{from{background-position:220% 0}to{background-position:0 0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (max-width:480px){.app{padding-block:56px 20px}.captions{min-height:10.5em}}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="controls">
+  <button class="pill-btn" id="alerts" type="button" hidden>Alerts</button>
+  <button class="pill-btn" id="end" type="button" hidden>End</button>
+  <button class="pill-btn" id="cards" type="button" hidden aria-controls="sheet">Cards</button>
+  <button class="pill-btn" id="type" type="button" aria-expanded="false" aria-controls="typebar">Type</button>
+  <button class="pill-btn" id="sound" type="button" aria-pressed="true">Sound on</button>
+</div>
+
+<main class="app" data-state="idle" id="app">
+  <button class="avatar" id="avatar" type="button" aria-label="Talk to Tavi">
+    <span class="rings" aria-hidden="true"><span></span><span></span><span></span></span>
+    <span class="loading" id="loading">Waking up…</span>
+    <canvas id="cv"></canvas>
+  </button>
+  <div class="captions" aria-live="polite">
+    <div class="you" id="you"></div>
+    <div class="say" id="say"></div>
+  </div>
+  <div class="hint" id="hint">Tap to talk</div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" aria-hidden="true">
+  <div class="shell"><div class="core">
+    <span class="grab" aria-hidden="true"></span>
+    <div id="sheetArt"></div>
+    <div class="meta"><span id="sheetCap"></span><button class="done" id="done" type="button">Done</button></div>
+  </div></div>
+</div>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Drawing" aria-hidden="true">
+  <img id="viewer-img" alt="" draggable="false">
+  <div class="viewer-bar"><span id="viewer-cap"></span><button class="viewer-x" id="viewer-x" type="button" aria-label="Close">✕</button></div>
+  <div class="viewer-hint" id="viewer-hint">Pinch or double-tap to zoom</div>
+</div>
+
+<form class="typebar" id="typebar" autocomplete="off" inert>
+  <div class="tb-shell"><div class="tb-core">
+    <input id="tb-in" type="text" placeholder="Type a message" aria-label="Message" enterkeyhint="send">
+    <button class="tb-send" id="tb-send" type="submit" aria-label="Send" disabled>↑</button>
+  </div></div>
+</form>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="/earlier.js"></script>
+<script type="module">
+let appName = "Tavi";
+try {
+  const reply = await fetch('/api/hq/state', { signal: AbortSignal.timeout(4000) });
+  const state = reply.ok ? await reply.json() : null;
+  if (state?.on !== true) appName = "Tavi";
+} catch { appName = "Tavi"; }
+// Choose the app's name before filling any of its pages.
+const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+while (walk.nextNode()) {
+  const node = walk.currentNode;
+  if (!node.parentElement?.closest('script,style')) node.textContent = node.textContent.replaceAll('Tavi', appName);
+}
+document.title = appName;
+document.querySelector('meta[name="apple-mobile-web-app-title"]')?.setAttribute('content', appName);
+for (const node of document.querySelectorAll('[aria-label],[placeholder]')) {
+  for (const attr of ['aria-label','placeholder']) if (node.hasAttribute(attr)) node.setAttribute(attr, node.getAttribute(attr).replaceAll('Tavi', appName));
+}
+if (appName !== 'Tavi') {
+  const manifest = document.querySelector('link[rel="manifest"]');
+  if (manifest) manifest.setAttribute('href', manifest.getAttribute('href').replace('.webmanifest', '.legacy.webmanifest'));
+}
+
+const el = id => document.getElementById(id);
+window.gsap?.ticker.lagSmoothing(0);
+const app = el('app'), avatar = el('avatar'), canvas = el('cv');
+const you = el('you'), say = el('say'), hint = el('hint'), soundBtn = el('sound'), endBtn = el('end');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const now = () => performance.now() / 1000;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* Shared animation state, read by the 3D loop */
+let state = 'idle', hover = false, sheetOpen = false, pulse = 0, happyUntil = 0, hopStart = -9, squash = 0, blinkNow = false;
+let voiceLevel = 0; // 0..1 from the live voice audio
+const pointer = { x: 0, y: 0, t: -99 };
+let gesture = () => {};
+
+/* ================= 3D character ================= */
+async function init3D() {
+  const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  {
+    const env = new THREE.Scene();
+    const room = new THREE.Mesh(new THREE.BoxGeometry(14, 9, 14), new THREE.MeshBasicMaterial({ color: 0x55595d, side: THREE.BackSide }));
+    room.position.y = 2; env.add(room);
+    const box = (w, h, x, y, z, s) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color().setScalar(s), side: THREE.DoubleSide }));
+      m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
+    };
+    box(4.5, 3, -4, 4, 4.5, 7); box(3, 4.5, 5, 1.5, -3.5, 4.5); box(7, 1.4, 0, 6, 0.5, 3); box(3, 2.5, -5.5, 0, -2, 1.6);
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(env, 0.04).texture;
+    pmrem.dispose();
+  }
+  const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 50);
+  camera.position.set(0, 0.28, 6.9); camera.lookAt(0, 0.06, 0);
+  const key = new THREE.DirectionalLight(0xfff1e6, 2.0); key.position.set(-3, 4, 5); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xd6e6ff, 2.4); rim.position.set(3.5, 2.5, -4); scene.add(rim);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3f44, 0.35));
+
+  const graphite = new THREE.MeshPhysicalMaterial({ color: 0x343a40, roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.3, sheen: 0.4, sheenRoughness: 0.6, sheenColor: new THREE.Color(0x8a96a0) });
+  const glove = graphite.clone(); glove.color.set(0x41474d);
+  const orange = new THREE.MeshPhysicalMaterial({ color: 0xff6a14, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.12 });
+  const glow = new THREE.MeshBasicMaterial({ color: 0xf6f7f4, toneMapped: false });
+  const glowSide = new THREE.MeshBasicMaterial({ color: 0xf6f7f4, toneMapped: false, side: THREE.DoubleSide });
+  const dotMat = new THREE.MeshBasicMaterial({ color: 0xff6a14, toneMapped: false });
+  function radialTex(inner, outer) {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, inner); g.addColorStop(1, outer); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  }
+
+  const root = new THREE.Group(); scene.add(root);
+  const rig = new THREE.Group(); root.add(rig);
+  const faceGroup = new THREE.Group(); rig.add(faceGroup);
+
+  const N = 2.6, E = 2 / N, AX = [1.0, 0.97, 0.9];
+  const normalAt = (X, Y, Z, out) => {
+    const g = (c, a) => Math.sign(c) * Math.pow(Math.abs(c / a), N - 1) / a;
+    return out.set(g(X, AX[0]), g(Y, AX[1]), g(Z, AX[2])).normalize();
+  };
+  const headGeo = new THREE.SphereGeometry(1, 128, 96);
+  {
+    const pos = headGeo.attributes.position, nor = headGeo.attributes.normal, v = new THREE.Vector3();
+    const sp = c => Math.sign(c) * Math.pow(Math.abs(c), E);
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      const X = sp(v.x) * AX[0], Y = sp(v.y) * AX[1], Z = sp(v.z) * AX[2];
+      pos.setXYZ(i, X, Y, Z); normalAt(X, Y, Z, v); nor.setXYZ(i, v.x, v.y, v.z);
+    }
+    pos.needsUpdate = true; nor.needsUpdate = true;
+    headGeo.computeBoundingSphere(); headGeo.computeBoundingBox();
+  }
+  const head = new THREE.Mesh(headGeo, graphite);
+  rig.add(head);
+  scene.updateMatrixWorld(true);
+
+  const ray = new THREE.Raycaster();
+  function mount(x, y, off) {
+    ray.set(new THREE.Vector3(x, y, 5), new THREE.Vector3(0, 0, -1));
+    const hit = ray.intersectObject(head, false)[0];
+    const p = hit ? hit.point.clone() : new THREE.Vector3(x, y, 0.88);
+    const n = normalAt(p.x, p.y, p.z, new THREE.Vector3());
+    const g = new THREE.Group();
+    g.position.copy(p).addScaledVector(n, off);
+    faceGroup.add(g);
+    g.lookAt(g.position.clone().add(n));
+    return g;
+  }
+  const eyeGeo = new THREE.CapsuleGeometry(0.09, 0.12, 8, 24);
+  const arcGeo = new THREE.TorusGeometry(0.085, 0.026, 12, 40, Math.PI);
+  const browGeo = new THREE.CapsuleGeometry(0.026, 0.12, 6, 16);
+  const pupilGeo = new THREE.SphereGeometry(0.056, 32, 20);
+  const glintGeo = new THREE.SphereGeometry(0.017, 12, 8);
+  const pupilMat = new THREE.MeshPhysicalMaterial({ color: 0x15181b, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.06 });
+  const eyes = [-1, 1].map(sx => {
+    const g = mount(0.31 * sx, -0.02, 0.004);
+    const m = new THREE.Mesh(eyeGeo, glow); m.scale.z = 0.35; g.add(m);
+    const p = new THREE.Mesh(pupilGeo, pupilMat); p.position.z = 0.07; m.add(p);
+    const glint = new THREE.Mesh(glintGeo, glow); glint.position.set(0.02, 0.025, 0.05); p.add(glint);
+    const arc = new THREE.Mesh(arcGeo, glow); arc.position.y = -0.03; arc.scale.setScalar(0.001); g.add(arc);
+    return { m, arc, p };
+  });
+  const brows = [-1, 1].map(sx => {
+    const g = mount(0.31 * sx, 0.235, 0.006);
+    const m = new THREE.Mesh(browGeo, glow); m.rotation.z = Math.PI / 2; m.scale.z = 0.5; g.add(m);
+    return { m, sx };
+  });
+  const cheekMat = new THREE.MeshBasicMaterial({ map: radialTex('rgba(255,112,40,1)', 'rgba(255,112,40,0)'), transparent: true, depthWrite: false, opacity: 0.14, toneMapped: false });
+  [-1, 1].forEach(sx => { const g = mount(0.56 * sx, -0.25, 0.018); g.add(new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.17), cheekMat)); });
+
+  const MN = 20, mouthPos = new Float32Array((MN + 1) * 2 * 3), mouthIdx = [];
+  for (let i = 0; i < MN; i++) { const u0 = i, u1 = i + 1, l0 = MN + 1 + i, l1 = MN + 2 + i; mouthIdx.push(u0, l0, u1, u1, l0, l1); }
+  const mouthGeo = new THREE.BufferGeometry();
+  mouthGeo.setAttribute('position', new THREE.BufferAttribute(mouthPos, 3));
+  mouthGeo.setIndex(mouthIdx);
+  mount(0, -0.36, 0.024).add(new THREE.Mesh(mouthGeo, glowSide));
+  function updateMouth(o, sm) {
+    const s = 0.0076, w = (24 - o * 5) * s, upC = -(sm * 5 - o * 2) * s, loC = -(sm * 5 + 8 + o * 32) * s;
+    for (let i = 0; i <= MN; i++) {
+      const t = i / MN, x = w * (2 * t - 1), b = 2 * (1 - t) * t;
+      mouthPos[i * 3] = x; mouthPos[i * 3 + 1] = b * upC; mouthPos[i * 3 + 2] = 0;
+      const j = (MN + 1 + i) * 3;
+      mouthPos[j] = x; mouthPos[j + 1] = b * loC; mouthPos[j + 2] = 0;
+    }
+    mouthGeo.attributes.position.needsUpdate = true;
+    mouthGeo.computeBoundingSphere();
+  }
+
+  const hatPivot = new THREE.Group(); hatPivot.position.y = 0.42; rig.add(hatPivot);
+  const hat = new THREE.Group(); hatPivot.add(hat);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 48, 0, Math.PI * 2, 0, Math.PI / 2), orange);
+  dome.scale.set(1.07, 0.74, 1.02); hat.add(dome);
+  const brim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.075, 24, 128), orange);
+  brim.rotation.x = Math.PI / 2; brim.scale.set(1.075, 1.03, 0.6); hat.add(brim);
+  const ridge = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 16, 96, Math.PI), orange);
+  ridge.rotation.y = Math.PI / 2; ridge.scale.set(1.02, 0.74, 1.4); hat.add(ridge);
+
+  const dots = new THREE.Group(); dots.position.y = 1.42; rig.add(dots);
+  const dotGeo = new THREE.SphereGeometry(0.05, 16, 12);
+  const dotMeshes = [0, 1, 2].map(() => { const m = new THREE.Mesh(dotGeo, dotMat); dots.add(m); return m; });
+
+  function makeHand(side) {
+    const g = new THREE.Group();
+    const palm = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 28), glove); palm.scale.set(0.19, 0.23, 0.14); g.add(palm);
+    const thumb = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), glove); thumb.scale.set(0.065, 0.1, 0.07);
+    thumb.position.set(-side * 0.16, -0.02, 0.05); thumb.rotation.z = side * 0.7; g.add(thumb);
+    const cuff = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.035, 12, 32), orange); cuff.rotation.x = Math.PI / 2; cuff.position.y = -0.2; g.add(cuff);
+    scene.add(g);
+    return g;
+  }
+  const HO = { L: { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 0 }, R: { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 0 } };
+  const hands = [
+    { g: makeHand(-1), base: { x: -1.38, y: -0.55, z: 0.15, rz: 0.25 }, side: -1, ph: 0, off: HO.L },
+    { g: makeHand(1), base: { x: 1.38, y: -0.55, z: 0.15, rz: -0.25 }, side: 1, ph: 1.7, off: HO.R }
+  ];
+
+  const shadowMat = new THREE.MeshBasicMaterial({ map: radialTex('rgba(0,0,0,.6)', 'rgba(0,0,0,0)'), transparent: true, depthWrite: false, toneMapped: false });
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), shadowMat);
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = -1.5; shadow.scale.set(0.85, 1, 1); scene.add(shadow);
+
+  let shadowStrength = 1;
+  function applyTheme() {
+    const d = matchMedia('(prefers-color-scheme: dark)').matches;
+    graphite.color.set(d ? 0x474e55 : 0x343a40);
+    glove.color.set(d ? 0x50575e : 0x41474d);
+    rim.intensity = d ? 3.4 : 2.4;
+    shadowStrength = d ? 1.25 : 1;
+  }
+  applyTheme();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
+
+  const REST = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0 };
+  gesture = name => {
+    const G = window.gsap;
+    if (!G) return;
+    G.killTweensOf(HO.L); G.killTweensOf(HO.R);
+    const tl = G.timeline();
+    const show = (o, pose, at) => tl.to(o, { ...REST, ...pose, s: 1, duration: 0.55, ease: 'back.out(1.7)' }, at);
+    const hide = (o, at) => tl.to(o, { ...REST, s: 0, duration: 0.45, ease: 'power2.in' }, at);
+    if (name === 'wave') {
+      hide(HO.L, 0);
+      show(HO.R, { x: -0.12, y: 0.85, z: 0.25, rz: 0.35 }, 0);
+      tl.to(HO.R, { rz: -0.3, duration: 0.17, ease: 'sine.inOut', yoyo: true, repeat: 5 });
+      hide(HO.R, '+=0.1');
+    } else if (name === 'listen') {
+      hide(HO.L, 0);
+      show(HO.R, { x: -0.28, y: 0.55, z: 0.05, rz: 0.5, ry: -0.3 }, 0);
+      hide(HO.R, '+=1.2');
+    } else if (name === 'think') {
+      hide(HO.L, 0);
+      show(HO.R, { x: -0.95, y: -0.35, z: 0.65, rz: 0.9, ry: -0.2 }, 0);
+    } else if (name === 'present') {
+      show(HO.L, { x: 0.45, y: -0.25, z: 0.55, rz: -0.6 }, 0);
+      show(HO.R, { x: -0.45, y: -0.25, z: 0.55, rz: 0.6 }, 0);
+    } else if (name === 'cheer') {
+      show(HO.L, { x: 0.12, y: 0.78, z: 0.1, rz: -0.35 }, 0);
+      show(HO.R, { x: -0.12, y: 0.78, z: 0.1, rz: 0.35 }, 0);
+      tl.to([HO.L, HO.R], { y: 0.64, duration: 0.14, yoyo: true, repeat: 3, ease: 'sine.inOut' });
+      hide(HO.L, '+=0.35'); hide(HO.R, '<');
+    } else {
+      hide(HO.L, 0); hide(HO.R, 0);
+    }
+  };
+
+  const fit = () => {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  };
+  new ResizeObserver(fit).observe(canvas);
+  fit();
+
+  const S = { gx: 0, gy: 0, lean: 0, open: 0, happy: 0, eye: 1, brow: 0, think: 0, tilt: 0, dots: 0, pupil: 1 };
+  const sacc = { x: 0, y: 0, next: 0 };
+  let last = now(), blinkAt = now() + 1.2, blinkStart = -9, lagY = 0, lagRY = 0;
+  function tick() {
+    const t = now(), dt = Math.min(0.05, Math.max(0.0001, t - last));
+    last = t;
+    const k = r => 1 - Math.exp(-dt * r);
+    let tgx = 0, tgy = 0, tlean = 0, teye = 1, tbrow = 0, tthink = 0, ttilt = 0;
+    const fresh = t - pointer.t < 2.5;
+    if (sheetOpen) { tgy = 1; tlean = 0.35; tbrow = 0.15; }
+    else if (state === 'thinking') { tgx = Math.sin(t * 0.9) * 0.6; tgy = -0.9; tlean = 0.15; teye = 0.92; tbrow = 0.4; tthink = 1; }
+    else if (state === 'listening') { tgx = fresh ? pointer.x * 0.5 : 0.1; tgy = fresh ? pointer.y * 0.4 : 0.05; tlean = 1; teye = 1.12; tbrow = 0.85; ttilt = -0.1; }
+    else {
+      if (fresh) { tgx = pointer.x; tgy = pointer.y; }
+      else {
+        if (t > sacc.next) { sacc.x = (Math.random() * 2 - 1) * 0.55; sacc.y = (Math.random() * 2 - 1) * 0.35; sacc.next = t + 1.6 + Math.random() * 2.6; }
+        tgx = sacc.x; tgy = sacc.y;
+      }
+      if (state === 'speaking') { tgx *= 0.3; tgy = tgy * 0.25 + 0.05; tbrow = 0.15 + Math.max(pulse, voiceLevel * 3) * 0.5; }
+      if (hover) { tlean = Math.max(tlean, 0.35); tbrow = Math.max(tbrow, 0.35); }
+    }
+    const happyOn = t < happyUntil ? 1 : 0;
+    if (happyOn) tbrow = Math.max(tbrow, 0.5);
+    S.gx += (tgx - S.gx) * k(state === 'thinking' ? 3 : 8);
+    S.gy += (tgy - S.gy) * k(8);
+    S.lean += (tlean - S.lean) * k(5);
+    S.eye += (teye - S.eye) * k(8);
+    S.brow += (Math.min(1, tbrow) - S.brow) * k(10);
+    S.think += (tthink - S.think) * k(4);
+    S.tilt += (ttilt - S.tilt) * k(4);
+    S.happy += (happyOn - S.happy) * k(9);
+    S.dots += ((state === 'thinking' ? 1 : 0) - S.dots) * k(8);
+    S.pupil += ((state === 'listening' ? 1.12 : state === 'thinking' ? 0.9 : hover ? 1.06 : 1) - S.pupil) * k(6);
+    squash *= Math.exp(-dt * 7);
+    pulse *= Math.exp(-dt * 9);
+
+    let tOpen = 0;
+    if (voiceLevel > 0.01) tOpen = clamp(voiceLevel * 7, 0, 1);
+    else if (state === 'speaking' && liveState !== 'on') tOpen = 0.16 + 0.52 * Math.abs(Math.sin(t * 10.7) * Math.sin(t * 3.3 + 0.6)) + pulse * 0.45;
+    S.open += (Math.min(1, tOpen) - S.open) * k(20);
+
+    if (blinkNow) { blinkAt = t; blinkNow = false; }
+    if (t > blinkAt) { blinkStart = t; blinkAt = t + 2.2 + Math.random() * 3.8; if (Math.random() < 0.18) blinkAt = t + 0.32; }
+    const b = t - blinkStart;
+    const blink = b < 0.07 ? b / 0.07 : b < 0.17 ? 1 - (b - 0.07) / 0.1 : 0;
+
+    const h = t - hopStart;
+    const hop = !reduce && h >= 0 && h < 0.6 ? Math.sin(Math.PI * h / 0.6) * 0.32 : 0;
+    const bob = reduce ? 0 : Math.sin(t * 1.25) * 0.06;
+    const breath = reduce ? 0 : Math.sin(t * 1.9) * 0.012;
+
+    root.position.y = bob + hop;
+    rig.position.set(0, -S.lean * 0.04, S.lean * 0.28);
+    rig.rotation.set(S.gy * 0.16 + S.lean * 0.05, S.gx * 0.32, S.tilt - S.gx * 0.04 + S.think * Math.sin(t * 0.9) * 0.05);
+    rig.scale.set(1 + breath * 0.5 + squash * 0.05, 1 - breath * 0.4 - squash * 0.07, 1 + breath * 0.5 + squash * 0.05);
+    faceGroup.rotation.set(S.gy * 0.09, S.gx * 0.13, 0);
+
+    const ey = Math.max(0.02, S.eye * (1 - blink * 0.92) * (1 - S.happy));
+    for (const e of eyes) {
+      e.m.scale.set(S.eye, ey, 0.35);
+      e.arc.scale.setScalar(Math.max(0.001, S.happy));
+      e.p.position.x = S.gx * 0.028;
+      e.p.position.y = -S.gy * 0.065;
+      e.p.scale.set(S.pupil, S.pupil, 1);
+    }
+    for (const br of brows) {
+      br.m.position.y = S.brow * 0.06 + S.think * 0.035 * br.sx;
+      br.m.rotation.z = Math.PI / 2 + S.think * 0.18 * br.sx - S.happy * 0.08 * br.sx;
+    }
+    cheekMat.opacity = 0.14 + S.happy * 0.55;
+    updateMouth(S.open, 1 + S.happy * 0.8);
+
+    lagY += (root.position.y - lagY) * k(12);
+    lagRY += (rig.rotation.y - lagRY) * k(9);
+    hat.position.y = clamp((lagY - root.position.y) * 0.35, -0.05, 0.06);
+    hat.rotation.y = (lagRY - rig.rotation.y) * 0.5;
+    hat.rotation.z = clamp((lagRY - rig.rotation.y) * -0.25, -0.08, 0.08);
+
+    dots.scale.setScalar(Math.max(0.001, S.dots));
+    dotMeshes.forEach((m, i) => {
+      const a = t * 2.2 + i * 2.094;
+      m.position.set(Math.cos(a) * 0.26, Math.sin(t * 4 + i) * 0.04, Math.sin(a) * 0.16);
+    });
+
+    for (const hd of hands) {
+      const o = hd.off, s = o.s;
+      hd.g.visible = s > 0.01;
+      if (!hd.g.visible) continue;
+      const tuck = 1 - Math.min(1, s);
+      const idle = reduce ? 0 : Math.sin(t * 1.6 + hd.ph) * 0.04;
+      hd.g.position.set(hd.base.x + o.x - hd.side * 0.45 * tuck, hd.base.y + o.y - 0.3 * tuck + idle + root.position.y * 0.6, hd.base.z + o.z - 0.35 * tuck + S.lean * 0.15);
+      hd.g.rotation.set(o.rx, o.ry - hd.side * 0.15, hd.base.rz + o.rz + (reduce ? 0 : Math.sin(t * 1.3 + hd.ph) * 0.05));
+      hd.g.scale.setScalar(Math.max(0.001, s));
+    }
+
+    const lift = root.position.y;
+    shadow.scale.set(0.85 * (1 - lift * 0.35), 1 - lift * 0.35, 1);
+    shadowMat.opacity = clamp(0.9 - lift * 0.9, 0.3, 1) * shadowStrength;
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  app.classList.add('ready');
+  setTimeout(() => gesture('wave'), 700);
+}
+init3D().catch(err => { console.warn('3D avatar unavailable', err); el('loading').textContent = "This browser can't show the 3D avatar."; });
+
+window.addEventListener('pointermove', e => {
+  const r = canvas.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height * 0.5;
+  pointer.x = clamp((e.clientX - cx) / (innerWidth * 0.45), -1, 1);
+  pointer.y = clamp((e.clientY - cy) / (innerHeight * 0.45), -1, 1);
+  pointer.t = now();
+}, { passive: true });
+avatar.addEventListener('pointerenter', () => { hover = true; });
+avatar.addEventListener('pointerleave', () => { hover = false; });
+avatar.addEventListener('pointerdown', () => { squash = 1; });
+
+/* ================= state + captions ================= */
+const HINTS = { idle: 'Tap to talk', connecting: 'Connecting…', listening: 'Listening · tap to mute', muted: 'Muted · tap to talk', thinking: '', speaking: '' };
+function setState(s) {
+  if (s === state) return;
+  const prev = state;
+  state = s;
+  app.dataset.state = s;
+  hint.textContent = HINTS[s] ?? '';
+  blinkNow = true;
+  if (s === 'listening' && (prev === 'idle' || prev === 'connecting' || prev === 'muted')) gesture('listen');
+  else if (s === 'thinking') gesture('think');
+  else if (!sheetOpen && !(s === 'idle' && now() < happyUntil)) gesture('rest');
+}
+function happy() { happyUntil = now() + 1.8; hopStart = now(); gesture('cheer'); }
+function line(text) { say.className = 'say'; say.textContent = text; }
+function words(text) {
+  say.className = 'say';
+  say.innerHTML = text.split(' ').map(w => `<span class="w">${esc(w)}</span>`).join(' ');
+  return [...say.querySelectorAll('.w')];
+}
+
+/* ================= sound + local speech (typed replies when voice is off) ================= */
+const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
+let soundOn = true, ttsVoice = null;
+function pickVoice() {
+  if (!synth) return;
+  const vs = synth.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+  const score = v => (v.lang === 'en-AU' ? 40 : v.lang.startsWith('en-GB') ? 25 : 10) + (/natural|online|neural/i.test(v.name) ? 20 : 0);
+  ttsVoice = vs.sort((a, b) => score(b) - score(a))[0] || null;
+}
+if (synth) { pickVoice(); synth.addEventListener?.('voiceschanged', pickVoice); }
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? 'Sound on' : 'Sound off';
+  soundBtn.setAttribute('aria-pressed', String(soundOn));
+  remoteAudio.muted = !soundOn;
+  if (!soundOn && synth) synth.cancel();
+});
+function speakLocal(text) {
+  return new Promise(resolve => {
+    const ws = words(text);
+    const est = Math.max(1300, text.split(/\s+/).length * 340), t0 = performance.now();
+    let done = false;
+    const timer = setInterval(() => {
+      const n = Math.ceil((performance.now() - t0) / est * ws.length);
+      ws.slice(0, n).forEach(w => w.classList.add('on'));
+      if (Math.random() < 0.35) pulse = Math.max(pulse, 0.6);
+    }, 110);
+    const finish = () => { if (done) return; done = true; clearInterval(timer); ws.forEach(w => w.classList.add('on')); resolve(); };
+    setState('speaking');
+    if (soundOn && synth) {
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        if (ttsVoice) u.voice = ttsVoice;
+        u.rate = 1.03; u.onend = finish; u.onerror = finish;
+        synth.cancel(); synth.speak(u);
+        setTimeout(finish, est + 4000);
+      } catch { setTimeout(finish, est); }
+    } else setTimeout(finish, est);
+  });
+}
+
+/* ================= cards (only when the brain sends one) ================= */
+function showSheet() {
+  el('sheet').classList.add('open'); el('scrim').classList.add('open');
+  el('sheet').setAttribute('aria-hidden', 'false');
+  el('sheetArt').scrollTop = 0;
+  if (!sheetOpen) glide(() => document.body.classList.add('sheet-open'));
+  sheetOpen = true;
+  gesture('present');
+}
+/*
+ * The avatar glides up to the top (and back) instead of jumping: measure where it is, switch the layout, then animate
+ * from the old spot to the new one with a transform (smooth on phones).
+ */
+function glide(change) {
+  const parts = [el('avatar'), document.querySelector('.captions')];
+  const before = parts.map(p => p.getBoundingClientRect());
+  change();
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  parts.forEach((p, i) => {
+    const a = before[i], b = p.getBoundingClientRect();
+    if (!b.width) return;
+    p.style.transition = 'none';
+    p.style.transformOrigin = 'top left';
+    p.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width})`;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      p.style.transition = 'transform .7s var(--ease)';
+      p.style.transform = '';
+    }));
+  });
+}
+/*
+ * Swipe the card down to put it away (from its handle or title, or anywhere once it's scrolled to the top).
+ * Swipe sideways to flip to the card before (right) or after (left).
+ */
+(() => {
+  const shell = el('sheet').querySelector('.shell'), sheet = el('sheet'), art = el('sheetArt');
+  let g = null;
+  const reset = () => { sheet.style.transition = ''; sheet.style.transform = ''; art.style.transition = ''; art.style.transform = ''; art.style.opacity = ''; };
+  shell.addEventListener('touchstart', e => {
+    g = null;
+    if (!sheetOpen || e.touches.length !== 1 || e.target.closest('button, a, input')) return;
+    const t = e.touches[0];
+    g = { x0: t.clientX, y0: t.clientY, dx: 0, dy: 0, axis: null, fromTop: !!e.target.closest('.grab, h3, .meta, .card-nav') || art.scrollTop <= 0 };
+  }, { passive: true });
+  shell.addEventListener('touchmove', e => {
+    if (!g) return;
+    const t = e.touches[0];
+    g.dx = t.clientX - g.x0; g.dy = t.clientY - g.y0;
+    if (!g.axis) {
+      if (Math.abs(g.dx) < 10 && Math.abs(g.dy) < 10) return;
+      g.axis = Math.abs(g.dx) > Math.abs(g.dy) ? (viewMode === 'card' && cards.length > 1 ? 'x' : 'none') : (g.fromTop ? 'y' : 'none');
+    }
+    if (g.axis === 'y') {
+      if (g.dy <= 0) { sheet.style.transform = ''; return; }
+      e.preventDefault();
+      sheet.style.transition = 'none';
+      sheet.style.transform = `translateY(${g.dy}px)`;
+    } else if (g.axis === 'x') {
+      e.preventDefault();
+      // Resist at the ends, where there's nothing to flip to.
+      const room = g.dx > 0 ? !!neighbour(1) : !!neighbour(-1);
+      art.style.transition = 'none';
+      art.style.transform = `translateX(${room ? g.dx : g.dx / 4}px)`;
+      art.style.opacity = String(1 - Math.min(0.5, Math.abs(g.dx) / 500));
+    }
+  }, { passive: false });
+  shell.addEventListener('touchend', () => {
+    if (!g) return;
+    const { axis, dx, dy } = g;
+    g = null;
+    reset();
+    if (axis === 'y' && dy > 90) closeSheet();
+    else if (axis === 'x' && Math.abs(dx) > 70) flip(dx > 0 ? 1 : -1);
+  });
+  shell.addEventListener('touchcancel', () => { g = null; reset(); });
+})();
+
+/* ================= kept cards: everything shown stays findable (Cards button, flip, "show me that again") ================= */
+let cards = [], viewMode = null, viewing = null; // newest first; viewMode: card | list | approval
+const cardsBtn = el('cards');
+const ownImage = src => /^\/api\/(drawings\/crop|browser\/shot)\//.test(src || '');
+function keep(card) {
+  if (!card?.id) return;
+  cards = [card, ...cards.filter(c => c.id !== card.id)];
+  cardsBtn.hidden = false;
+}
+async function syncCards() {
+  try {
+    const r = await fetch('/api/cards');
+    if (!r.ok) return;
+    const fresh = (await r.json()).cards || [];
+    // Keep anything that arrived over the socket while this was loading (test cards are shown but never saved).
+    cards = [...cards.filter(c => !fresh.some(f => f.id === c.id) && (c.shown_at || '') > (fresh[0]?.shown_at || '')), ...fresh];
+    cardsBtn.hidden = !cards.length;
+    if (viewMode === 'list') renderList();
+  } catch {}
+}
+const timeOf = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }); };
+function dayOf(iso) {
+  const d = new Date(iso); if (isNaN(d)) return '';
+  const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 864e5);
+  return days === 0 ? 'Today' : days === 1 ? 'Yesterday' : d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+const whenOf = iso => { const day = dayOf(iso); return day === 'Today' ? timeOf(iso) : `${day}, ${timeOf(iso)}`; };
+const neighbour = dir => { const i = cards.findIndex(c => c.id === viewing?.id); return i < 0 ? null : cards[i + dir] || null; };
+
+/** A card the PC sent (an answer, a drawing, a notice). Same card again (the answer's summary joining its drawing): update in place. */
+function openSheet(card) {
+  keep(card);
+  if (currentApproval) return; // an approval on screen takes priority; the card waits under Cards
+  const same = sheetOpen && viewMode === 'card' && viewing?.id && viewing.id === card.id;
+  showCard(card, 0, same);
+}
+function showCard(card, dir = 0, inPlace = false) {
+  viewMode = 'card'; viewing = card;
+  el('sheet').classList.remove('is-approval');
+  const imgs = (card.images || (card.image ? [{ src: card.image }] : [])).filter(i => ownImage(i.src));
+  // Tapping a drawing opens the in-app viewer. (A plain link would replace the app, and a Home Screen app has no back button.)
+  const pics = imgs.map(i => {
+    const cap = i.caption || card.title;
+    return `<figure><img class="drawing" src="${esc(i.src)}" alt="${esc(cap)}" data-cap="${esc(cap)}">${i.caption && i.caption !== card.title ? `<figcaption>${esc(i.caption)}</figcaption>` : ''}</figure>`;
+  }).join('');
+  const rows = (card.rows || []).length ? `<dl>${card.rows.map(r => `<dt>${esc(r.label)}</dt><dd>${esc(r.value)}</dd>`).join('')}</dl>` : '';
+  const older = neighbour(1), newer = neighbour(-1);
+  const nav = card.id ? `<div class="card-nav"><button class="to-list" type="button">All cards</button>
+    <span>${esc(whenOf(card.shown_at || card.created_at))}</span>
+    <button class="step" type="button" data-step="1" aria-label="Previous card" ${older ? '' : 'disabled'}>‹</button>
+    <button class="step" type="button" data-step="-1" aria-label="Next card" ${newer ? '' : 'disabled'}>›</button></div>` : '';
+  const art = el('sheetArt'), top = art.scrollTop;
+  art.innerHTML = `<div class="card-body">${nav}<h3>${esc(card.title)}</h3>${pics}${rows}</div>`;
+  el('sheetCap').textContent = card.source || '';
+  viewable(card.title);
+  art.querySelector('.to-list')?.addEventListener('click', openList);
+  art.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => flip(Number(b.dataset.step))));
+  if (inPlace) { art.scrollTop = top; return; }
+  showSheet();
+  if (dir && !reduce) art.animate([{ transform: `translateX(${dir > 0 ? -48 : 48}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 360, easing: 'cubic-bezier(.32,.72,0,1)' });
+}
+/** dir 1: the card before this one (older); -1: the one after (newer). */
+function flip(dir) {
+  if (viewMode !== 'card') return;
+  const next = neighbour(dir);
+  if (next) showCard(next, dir);
+}
+function renderList() {
+  let day = '';
+  const items = cards.map(c => {
+    const d = dayOf(c.shown_at || c.created_at);
+    const head = d !== day ? `<div class="cards-day">${esc(d)}</div>` : '';
+    day = d;
+    const first = (c.images || []).find(i => ownImage(i.src));
+    const thumb = first ? `<img class="card-thumb" src="${esc(first.src)}" alt="" loading="lazy">` : `<span class="card-thumb text" aria-hidden="true"><i></i><i></i><i></i></span>`;
+    const sub = [c.source, timeOf(c.shown_at || c.created_at)].filter(Boolean).join(' · ');
+    return `${head}<button class="card-row" type="button" data-id="${esc(c.id)}">${thumb}<span class="card-text"><b>${esc(c.title)}</b><small>${esc(sub)}</small></span></button>`;
+  }).join('');
+  el('sheetArt').innerHTML = `<div class="cards-list"><h3>Cards</h3><p class="cards-sub">Everything I’ve put on your screen.</p>${items || `<p class="cards-empty">Nothing yet. Ask me to show you a drawing and it’ll be kept here.</p>`}</div>`;
+  el('sheetCap').textContent = '';
+  el('sheetArt').querySelectorAll('.card-row').forEach(b => b.addEventListener('click', () => {
+    const c = cards.find(x => x.id === b.dataset.id);
+    if (c) showCard(c);
+  }));
+}
+function openList() {
+  if (currentApproval) return;
+  viewMode = 'list'; viewing = null;
+  el('sheet').classList.remove('is-approval');
+  renderList();
+  showSheet();
+  syncCards();
+}
+cardsBtn.addEventListener('click', () => (sheetOpen && viewMode === 'list' ? closeSheet() : openList()));
+addEventListener('keydown', e => {
+  if (!sheetOpen || viewMode !== 'card' || el('viewer').classList.contains('open') || e.target.closest?.('input')) return;
+  if (e.key === 'ArrowLeft') flip(1);
+  else if (e.key === 'ArrowRight') flip(-1);
+});
+/* After a card is put away, the Cards button gives a little nudge (and, the first few times, says so). */
+function tuckAway() {
+  cardsBtn.classList.remove('nudge'); void cardsBtn.offsetWidth; cardsBtn.classList.add('nudge');
+  let shown = 0;
+  // Read the earlier hint count once; new visits write the current key.
+  try { shown = Number(savedValue(localStorage, 'tavi-cards-hint') || 0); localStorage.setItem('tavi-cards-hint', String(shown + 1)); } catch {}
+  if (shown < 3) {
+    hint.textContent = 'Kept under Cards, top right';
+    setTimeout(() => { hint.textContent = HINTS[state] ?? ''; }, 3200);
+  }
+}
+function viewable(caption) {
+  el('sheetArt').querySelectorAll('img.drawing').forEach(i => { i.onclick = () => openViewer(i.src, i.dataset.cap || caption); });
+}
+
+/* ================= full-screen drawing viewer: pinch, drag, double-tap; ✕ always there ================= */
+const V = { s: 1, x: 0, y: 0, fit: 1, w: 0, h: 0, pts: new Map(), pinch: null, lastTap: 0 };
+function openViewer(src, caption) {
+  const img = el('viewer-img');
+  el('viewer-cap').textContent = caption || '';
+  el('viewer-hint').style.opacity = '1';
+  img.onload = () => { V.w = img.naturalWidth; V.h = img.naturalHeight; fitViewer(); };
+  img.src = src;
+  el('viewer').classList.add('open');
+  el('viewer').setAttribute('aria-hidden', 'false');
+  if (img.complete && img.naturalWidth) img.onload();
+  setTimeout(() => { el('viewer-hint').style.opacity = '0'; }, 2600);
+}
+function closeViewer() {
+  el('viewer').classList.remove('open');
+  el('viewer').setAttribute('aria-hidden', 'true');
+  V.pts.clear(); V.pinch = null;
+}
+function fitViewer() {
+  if (!V.w) return;
+  V.fit = Math.min(innerWidth / V.w, innerHeight / V.h);
+  V.s = V.fit; V.x = 0; V.y = 0;
+  drawViewer();
+}
+function drawViewer() {
+  const w = V.w * V.s, h = V.h * V.s;
+  V.x = w <= innerWidth ? (innerWidth - w) / 2 : Math.min(0, Math.max(innerWidth - w, V.x));
+  V.y = h <= innerHeight ? (innerHeight - h) / 2 : Math.min(0, Math.max(innerHeight - h, V.y));
+  el('viewer-img').style.transform = `translate(${V.x}px,${V.y}px) scale(${V.s})`;
+}
+function zoomAt(px, py, s) {
+  s = Math.max(V.fit, Math.min(Math.max(V.fit * 8, 2), s));
+  V.x = px - (px - V.x) * (s / V.s);
+  V.y = py - (py - V.y) * (s / V.s);
+  V.s = s;
+  drawViewer();
+}
+(() => {
+  const v = el('viewer');
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  v.addEventListener('pointerdown', e => {
+    if (e.target.closest('.viewer-x')) return;
+    v.setPointerCapture(e.pointerId);
+    V.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (V.pts.size === 2) {
+      const [a, b] = [...V.pts.values()];
+      V.pinch = { d: dist(a, b), s: V.s };
+    } else if (V.pts.size === 1) {
+      const now = Date.now();
+      if (now - V.lastTap < 300) { V.s > V.fit * 1.1 ? fitViewer() : zoomAt(e.clientX, e.clientY, V.fit * 3); V.lastTap = 0; }
+      else V.lastTap = now;
+    }
+  });
+  v.addEventListener('pointermove', e => {
+    const prev = V.pts.get(e.pointerId);
+    if (!prev) return;
+    const cur = { x: e.clientX, y: e.clientY };
+    V.pts.set(e.pointerId, cur);
+    if (V.pts.size === 2 && V.pinch) {
+      const [a, b] = [...V.pts.values()];
+      zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, V.pinch.s * dist(a, b) / V.pinch.d);
+    } else if (V.pts.size === 1) {
+      V.x += cur.x - prev.x; V.y += cur.y - prev.y;
+      drawViewer();
+    }
+  });
+  const up = e => { V.pts.delete(e.pointerId); if (V.pts.size < 2) V.pinch = null; };
+  v.addEventListener('pointerup', up);
+  v.addEventListener('pointercancel', up);
+  v.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, V.s * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); }, { passive: false });
+  el('viewer-x').addEventListener('click', closeViewer);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && v.classList.contains('open')) closeViewer(); });
+  addEventListener('resize', () => { if (v.classList.contains('open')) fitViewer(); });
+})();
+/* Approvals: the exact email, sent only when you tap Approve. */
+let currentApproval = null;
+function openApproval(a) {
+  currentApproval = a;
+  viewMode = 'approval'; viewing = null;
+  el('sheet').classList.add('is-approval');
+  if (a.kind === 'action') {
+    // A calendar, Drive or Gmail change: the exact call, field by field.
+    const rows = (a.rows || []).map(r => `<dt>${esc(r.label)}</dt><dd>${esc(r.value)}</dd>`).join('');
+    // Browser go-aheads come with a screenshot of the review page (only ever from our own server).
+    const shot = a.image && a.image.startsWith('/api/browser/shot/') ? `<img class="drawing" src="${esc(a.image)}" alt="The page it's about to submit">` : '';
+    el('sheetArt').innerHTML = `<div class="appr"><h3>${esc(a.subject)}</h3>${shot}
+      <dl><dt>Using</dt><dd>${esc(a.account)}</dd>${rows}</dl>
+      <div class="appr-actions"><button class="btn-ghost" type="button" id="appr-no">Not now</button><button class="btn-go" type="button" id="appr-yes">Approve</button></div></div>`;
+    viewable(a.subject);
+    el('appr-yes').onclick = () => decideApproval('approve');
+    el('appr-no').onclick = () => decideApproval('reject');
+    showSheet();
+    return;
+  }
+  el('sheetArt').innerHTML = `<div class="appr"><h3>Ready to send</h3>
+    <dl><dt>From</dt><dd>${esc(a.account)}</dd><dt>To</dt><dd>${esc(a.to.join(', '))}</dd>${a.cc && a.cc.length ? `<dt>Cc</dt><dd>${esc(a.cc.join(', '))}</dd>` : ''}<dt>Subject</dt><dd>${esc(a.subject)}</dd></dl>
+    <div class="appr-body">${esc(a.body)}</div>
+    <div class="appr-actions"><button class="btn-ghost" type="button" id="appr-no">Not now</button><button class="btn-go" type="button" id="appr-yes">Approve &amp; send</button></div></div>`;
+  el('appr-yes').onclick = () => decideApproval('approve');
+  el('appr-no').onclick = () => decideApproval('reject');
+  showSheet();
+}
+function decideApproval(decision) {
+  if (!currentApproval || gw?.readyState !== WebSocket.OPEN) return;
+  el('appr-yes').disabled = true; el('appr-no').disabled = true;
+  if (decision === 'approve') el('appr-yes').textContent = currentApproval.kind === 'action' ? 'Doing it…' : 'Sending…';
+  gw.send(JSON.stringify({ type: 'decide', id: currentApproval.id, nonce: currentApproval.nonce, decision }));
+}
+/* The assistant's own name, once the user has given it one ("Tavi" is the app). */
+function setName(name) {
+  const n = name || appName;
+  document.title = n;
+  el('avatar').setAttribute('aria-label', `Talk to ${n}`);
+}
+function closeSheet() {
+  if (!sheetOpen) return;
+  el('sheet').classList.remove('open'); el('scrim').classList.remove('open');
+  el('sheet').setAttribute('aria-hidden', 'true');
+  glide(() => document.body.classList.remove('sheet-open'));
+  sheetOpen = false;
+  if (viewMode === 'card' && cards.length) tuckAway();
+  viewMode = null; viewing = null;
+  currentApproval = null; // a dismissed approval stays pending on the PC and comes back on reload
+  setTimeout(() => el('sheet').classList.remove('is-approval'), 800);
+  gesture('rest');
+}
+el('done').addEventListener('click', closeSheet);
+el('scrim').addEventListener('click', closeSheet);
+
+/* ================= things it wants to tell you ================= */
+let unseen = [];
+function showNotices(items) {
+  unseen = [...items, ...unseen.filter(u => !items.some(i => i.id === u.id))];
+  const top = items[0];
+  you.textContent = items.length > 1 ? `${items.length} things since you last looked` : top.title;
+  line(top.spoken);
+  [...items].reverse().forEach(i => keep(i.card)); // all of them stay findable under Cards
+  if (top.card && !currentApproval && !sheetOpen) openSheet(top.card);
+  gesture('wave'); hopStart = now();
+  markSeenWhenVisible();
+}
+function markSeenWhenVisible() {
+  if (!unseen.length) return;
+  if (document.visibilityState !== 'visible') return;
+  const ids = unseen.map(n => n.id);
+  setTimeout(() => {
+    if (document.visibilityState === 'visible' && gw?.readyState === WebSocket.OPEN) {
+      gw.send(JSON.stringify({ type: 'seen', ids }));
+      unseen = unseen.filter(n => !ids.includes(n.id));
+    }
+  }, 4000);
+}
+document.addEventListener('visibilitychange', markSeenWhenVisible);
+
+/* ================= gateway connection (subtitles, cards, typed input) ================= */
+let gw = null, voiceReady = false, brainBusy = false;
+function connectGateway() {
+  gw = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+  gw.onmessage = ev => {
+    let m; try { m = JSON.parse(ev.data); } catch { return; }
+    if (m.type === 'hello') {
+      voiceReady = !!m.voiceReady;
+      setName(m.name);
+      syncCards();
+      if (m.notice) line(m.notice);
+      else if (!say.textContent) line(voiceReady ? "G'day. Tap me and ask me anything about the job." : "My voice isn't set up yet. You can type to me in the meantime.");
+    } else if (m.type === 'show' && m.card) {
+      if (!currentApproval) openSheet(m.card);
+    } else if (m.type === 'notices' && m.items?.length) {
+      showNotices(m.items);
+    } else if (m.type === 'notice' && m.notice) {
+      showNotices([m.notice]);
+    } else if (m.type === 'name') {
+      setName(m.name);
+    } else if (m.type === 'approval' && m.approval) {
+      openApproval(m.approval);
+    } else if (m.type === 'outcome' && m.outcome) {
+      const o = m.outcome;
+      if (currentApproval && o.approvalId === currentApproval.id) { currentApproval = null; closeSheet(); }
+      line(o.message);
+      if (o.status === 'verified' || o.status === 'accepted') happy();
+    } else if (m.type === 'heard' && m.text) {
+      you.textContent = `“${m.text}”`;
+    } else if (m.type === 'brain') {
+      if (m.phase === 'thinking') {
+        brainBusy = true;
+        if (state !== 'speaking') setState('thinking');
+        say.className = 'say'; say.innerHTML = `<span class="think">${esc(m.label || 'Working on it')}</span>`;
+      } else if (m.phase === 'done') {
+        brainBusy = false;
+        if (m.card) openSheet(m.card);
+        if (m.source === 'typed' && liveState !== 'on') speakLocal(m.spoken).then(() => setState('idle'));
+        else if (m.source === 'typed') line(m.spoken);
+        else if (state === 'thinking') setState(liveState === 'on' ? (muted ? 'muted' : 'listening') : 'idle');
+      } else if (m.phase === 'error') {
+        brainBusy = false;
+        line("Sorry, I hit a snag on that one.");
+        console.warn('brain error:', m.message);
+        setState(liveState === 'on' ? (muted ? 'muted' : 'listening') : 'idle');
+      }
+    } else if (m.type === 'live') {
+      if (m.state === 'closed') hangUp();
+      else if (m.state === 'degraded' && m.message) line(m.message);
+    }
+  };
+  gw.onclose = () => setTimeout(connectGateway, 1500);
+}
+connectGateway();
+
+/* ================= live voice (OpenAI gpt-live-1 over WebRTC) ================= */
+const remoteAudio = new Audio(); remoteAudio.autoplay = true;
+let pc = null, dc = null, mic = null, liveState = 'off', muted = false;
+let audioCtx = null, analyser = null, buf = null, lastVoice = 0, lastActivity = 0;
+let userLine = '', userAt = 0, botLine = '', botAt = 0;
+const IDLE_HANGUP_S = 120;
+
+function hookAnalyser(stream) {
+  try {
+    audioCtx = audioCtx || new AudioContext();
+    const src = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser(); analyser.fftSize = 1024;
+    buf = new Float32Array(analyser.fftSize);
+    src.connect(analyser);
+  } catch (e) { console.warn('analyser unavailable', e); }
+}
+function readLevel() {
+  if (!analyser) return 0;
+  analyser.getFloatTimeDomainData(buf);
+  let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+  return Math.sqrt(sum / buf.length);
+}
+function waitIce(conn) {
+  if (conn.iceGatheringState === 'complete') return Promise.resolve();
+  return new Promise(res => {
+    const t = setTimeout(res, 2500);
+    conn.addEventListener('icegatheringstatechange', () => { if (conn.iceGatheringState === 'complete') { clearTimeout(t); res(); } });
+  });
+}
+function sendLive(evt) { if (dc?.readyState === 'open') dc.send(JSON.stringify({ event_id: `c_${Date.now().toString(36)}`, ...evt })); }
+
+async function connectVoice() {
+  liveState = 'connecting'; setState('connecting');
+  try {
+    // iPhone: ask for the mic first, inside the tap, before any other await.
+    const micRequest = navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    audioCtx = audioCtx || new AudioContext();
+    audioCtx.resume().catch(() => {});
+    mic = await micRequest;
+    pc = new RTCPeerConnection();
+    pc.addEventListener('track', e => {
+      const stream = e.streams[0] || new MediaStream([e.track]);
+      remoteAudio.srcObject = stream; remoteAudio.muted = !soundOn;
+      remoteAudio.play().catch(() => {});
+      hookAnalyser(stream);
+    });
+    for (const t of mic.getAudioTracks()) pc.addTrack(t, mic);
+    dc = pc.createDataChannel('oai-events');
+    dc.addEventListener('message', ev => { try { onLive(JSON.parse(ev.data)); } catch {} });
+    pc.addEventListener('connectionstatechange', () => {
+      if (pc && ['failed', 'closed'].includes(pc.connectionState)) hangUp('Lost the voice connection. Tap me to reconnect.');
+    });
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitIce(pc);
+    const r = await fetch('/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sdp: pc.localDescription.sdp }) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || `Voice session failed (${r.status})`);
+    await pc.setRemoteDescription({ type: 'answer', sdp: data.transport.sdp });
+    liveState = 'on'; muted = false; lastActivity = now();
+    endBtn.hidden = false;
+    you.textContent = '';
+    line('Go ahead.');
+    setState('listening');
+  } catch (err) {
+    console.warn(err);
+    hangUp(err.name === 'NotAllowedError'
+      ? 'I need the microphone. On iPhone: Settings, then your browser, then turn Microphone on. Then reload and tap me.'
+      : (err.message || 'Could not start the voice.'));
+  }
+}
+function hangUp(message) {
+  try { if (dc?.readyState === 'open') dc.send(JSON.stringify({ type: 'session.close', event_id: 'close' })); } catch {}
+  try { pc?.close(); } catch {}
+  mic?.getTracks().forEach(t => t.stop());
+  pc = dc = mic = null; analyser = null; voiceLevel = 0;
+  if (liveState !== 'off') fetch('/api/session/close', { method: 'POST' }).catch(() => {});
+  liveState = 'off'; endBtn.hidden = true;
+  setState('idle');
+  if (message) line(message);
+}
+function setMuted(m) {
+  muted = m;
+  sendLive({ type: m ? 'session.input_audio.mute' : 'session.input_audio.unmute' });
+  mic?.getAudioTracks().forEach(t => { t.enabled = !m; });
+  if (state !== 'thinking' && state !== 'speaking') setState(m ? 'muted' : 'listening');
+}
+function onLive(e) {
+  const t = now();
+  if (e.type === 'session.input_transcript.delta') {
+    lastActivity = t;
+    if (t - userAt > 1.5) userLine = '';
+    userLine += e.delta || ''; userAt = t;
+    you.textContent = `“${userLine.trim()}”`;
+  } else if (e.type === 'session.output_transcript.delta') {
+    lastActivity = t;
+    if (t - botAt > 1.5) botLine = '';
+    botLine += e.delta || ''; botAt = t;
+    line(botLine.trim());
+  } else if (e.type === 'session.delegation.created') {
+    brainBusy = true;
+  } else if (e.type === 'session.closed') {
+    hangUp(e.reason === 'expired' ? 'Session timed out. Tap me to start again.' : undefined);
+  } else if (e.type === 'error') {
+    console.warn('live error', e);
+  }
+}
+// Speaking detection, mouth level and idle hang-up
+setInterval(() => {
+  if (liveState !== 'on') { voiceLevel = 0; return; }
+  const lvl = readLevel();
+  voiceLevel = lvl;
+  const t = now();
+  if (lvl > 0.03) {
+    lastVoice = t; lastActivity = t;
+    if (state !== 'speaking') setState('speaking');
+  } else if (state === 'speaking' && t - lastVoice > 0.7) {
+    setState(brainBusy ? 'thinking' : (muted ? 'muted' : 'listening'));
+  }
+  if (!brainBusy && t - lastActivity > IDLE_HANGUP_S) hangUp('Hung up to save credit. Tap me to start again.');
+}, 80);
+
+avatar.addEventListener('click', () => {
+  // A card on screen stays put while you talk (it's above the fold now); Done or a swipe puts it away.
+  if (liveState === 'off') {
+    if (!voiceReady) { line("My voice isn't set up yet. Add the OpenAI key to .env, restart me, then tap again. You can type in the meantime."); return; }
+    connectVoice();
+  } else if (liveState === 'on') {
+    setMuted(!muted);
+  }
+});
+endBtn.addEventListener('click', () => hangUp('Bye for now. Tap me when you need me.'));
+
+/* ================= phone alerts (Web Push) ================= */
+const alertsBtn = el('alerts');
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const pushSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const b64ToBytes = s => { const p = '='.repeat((4 - s.length % 4) % 4); const raw = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(raw, c => c.charCodeAt(0)); };
+function updateAlertsPill() {
+  alertsBtn.hidden = pushSupported ? Notification.permission === 'granted' : !(isIOS && !standalone);
+}
+async function subscribePush() {
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    const { key } = await (await fetch('/api/push/key')).json();
+    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(key) });
+  }
+  await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub) });
+}
+alertsBtn.addEventListener('click', async () => {
+  if (!pushSupported) {
+    line('For alerts on iPhone: tap Share, then Add to Home Screen. Open me from the Home Screen and tap Alerts.');
+    return;
+  }
+  const perm = await Notification.requestPermission(); // must be the first thing in the tap
+  if (perm !== 'granted') { line('No worries, alerts are off. You can switch them on later in your iPhone settings.'); updateAlertsPill(); return; }
+  try { await subscribePush(); line("Done. I'll tap you on the shoulder when something needs you."); }
+  catch (e) { console.warn(e); line("Couldn't switch alerts on just now. Try again in a sec."); }
+  updateAlertsPill();
+});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(() => {
+    if (pushSupported && Notification.permission === 'granted') subscribePush().catch(() => {}); // keep the PC's copy fresh
+  }).catch(e => console.warn('service worker', e));
+}
+updateAlertsPill();
+
+/* ================= typing ================= */
+const typeBtn = el('type'), typebar = el('typebar'), tbInput = el('tb-in'), tbSend = el('tb-send');
+function setTyping(on) {
+  document.body.classList.toggle('typing', on);
+  typebar.inert = !on;
+  typeBtn.textContent = on ? 'Close' : 'Type';
+  typeBtn.setAttribute('aria-expanded', String(on));
+  if (on) setTimeout(() => tbInput.focus({ preventScroll: true }), 300);
+  else tbInput.blur();
+}
+typeBtn.addEventListener('click', () => setTyping(!document.body.classList.contains('typing')));
+tbInput.addEventListener('input', () => { tbSend.disabled = !tbInput.value.trim(); });
+tbInput.addEventListener('keydown', e => { if (e.key === 'Escape') setTyping(false); });
+typebar.addEventListener('submit', e => {
+  e.preventDefault();
+  const v = tbInput.value.trim();
+  if (!v || brainBusy || gw?.readyState !== WebSocket.OPEN) return;
+  tbInput.value = ''; tbSend.disabled = true;
+  you.textContent = `“${v}”`;
+  gw.send(JSON.stringify({ type: 'typed', text: v }));
+});
+
+setState('idle');
+</script>
+</body>
+</html>

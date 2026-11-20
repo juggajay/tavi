@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc">
+  <theme><name>Tavi</name><titleLayout>NLIMC</titleLayout><font place="ActiveWindow"><name>DejaVu Sans</name><size>10</size></font></theme>
+  <desktops><number>1</number><firstdesk>1</firstdesk><names><name>Tavi</name></names></desktops>
+  <focus><focusNew>yes</focusNew><followMouse>no</followMouse></focus>
+  <keyboard><keybind key="A-F4"><action name="Close"/></keybind></keyboard>
+  <mouse><context name="Titlebar"><mousebind button="Left" action="Drag"><action name="Move"/></mousebind></context></mouse>
+  <applications>
+    <application class="Google-chrome*"><position force="yes"><x>center</x><y>center</y></position><size><width>90%</width><height>84%</height></size><maximized>no</maximized></application>
+    <application class="Chromium*"><position force="yes"><x>center</x><y>center</y></position><size><width>90%</width><height>84%</height></size><maximized>no</maximized></application>
+  </applications>
+</openbox_config>

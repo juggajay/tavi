@@ -1,0 +1,111 @@
+import { TEST_DIR } from "../isolate.js";
+import { earlier } from "../../src/shared/earlier.js";
+import assert from "node:assert/strict";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import path from "node:path";
+import { rig, until } from "./hq-api-fixture.test.js";
+
+const r = await rig();
+const { listBots, gatewayKey, teamGatewayKey } = await import("../../src/hq/bots.js");
+const { db } = await import("../../src/store/db.js");
+const { standingFor } = await import("../../src/hq/engines/standing.js");
+try {
+  await until(() => r.gateway.requests.some((q) => q.path === "/health"));
+  await until(() => db.prepare("SELECT value FROM settings WHERE key='team:restart-needed'").get()?.value === "no");
+  const state = await r.request("/state");
+  assert.equal(state.status, 200); assert.equal(state.data.on, true);
+  assert.equal(state.data.toolbox, "up"); assert.equal(state.data.guard, "up");
+  assert.equal(r.calls.filter((c) => c.route === "/seen").length, 0, "checking state is not owner activity");
+  assert.ok(state.data.bots.every((b: object) => !("box" in b)));
+  assert.deepEqual(Object.keys(state.data.safety).sort(), ["level", "ownerUbuntuRunning", "pinSet", "until"]);
+  assert.ok(!state.text.includes(gatewayKey("pebble")) && !state.text.includes(teamGatewayKey()));
+  assert.equal((await r.request("/state", "GET", undefined, false, { origin: "https://elsewhere.invalid" })).status, 403);
+  assert.equal((await r.request("/state", "GET", undefined, false, { "x-tavi-agent": "1" })).status, 403);
+  assert.equal((await r.request("/state", "GET", undefined, false, { [earlier.agentHeader]: "1" })).status, 403);
+  assert.equal((await r.request("/bots", "POST", { id: "travel", name: "Travel" }, true)).status, 403);
+  assert.equal((await r.request("/bots", "POST", { id: "../bad", name: "Bad" })).status, 400);
+  assert.equal((await r.request("/bots", "POST", { id: "travel", name: "Travel", card: { version: 1, purpose: "Compare travel choices", notFor: "Booking", handsBack: "Two choices", example: "A short list", given: "Dates", servers: ["calc"], stopAndAsk: "Missing dates", choice: { provider: "anthropic", model: "claude-opus-5-5", effort: "high" }, fallbacks: [], computer: false, trials: [{ ask: "Compare two trips", goodAnswer: "Two choices" }], privateInfo: "none" }, look: { shape: "pebble", colour: "green" } })).status, 201);
+  assert.equal((await r.request("/bots/travel", "PATCH", { name: "Jack", voice: "ash" }, true)).status, 200);
+  assert.equal((await r.request("/bots/travel", "PATCH", { servers: [] }, true)).status, 403);
+  assert.equal((await r.request("/bots/travel", "PATCH", { soul: "Choose carefully" })).status, 200);
+  assert.equal((await r.request("/bots/travel/engine", "PATCH", { fallbacks: [] }, true)).status, 403);
+  assert.equal((await r.request("/bots/travel/engine", "PATCH", { primary: { provider: "anthropic", model: "test-model" }, fallbacks: [] })).status, 200);
+  assert.equal((await r.request("/bots/travel/engine")).data.primary.model, "test-model");
+  assert.ok((await r.request("/subscriptions")).data.find((s: { provider: string }) => s.provider === "anthropic").usedBy.includes("travel"));
+  assert.equal((await r.request("/subscriptions/anthropic/sign-in", "POST", {}, true)).status, 403);
+  assert.equal((await r.request("/subscriptions/anthropic/sign-in", "POST", {})).data.session, "signin-1");
+  assert.equal((await r.request("/subscriptions/anthropic", "DELETE", undefined, true)).status, 403);
+  assert.equal((await r.request("/subscriptions/anthropic", "DELETE")).status, 200);
+  assert.equal((await r.request("/sign-in/signin-1/events", "GET", undefined, true)).status, 403);
+  assert.match((await r.request("/sign-in/signin-1/events")).text, /Please sign in/);
+  const marker = "sign-in-words-never-kept-429861";
+  const logged: string[] = [];
+  const original = console.log; console.log = (...args) => { logged.push(args.join(" ")); };
+  try { assert.equal((await r.request("/sign-in/signin-1/input", "POST", { text: marker })).status, 200); }
+  finally { console.log = original; }
+  assert.equal(r.input, marker);
+  assert.equal((await r.request("/sign-in/signin-1/input", "POST", { text: "no" }, true)).status, 403);
+  assert.equal((await r.request("/sign-in/signin-1", "DELETE")).status, 200);
+  assert.ok(!logged.join("\n").includes(marker));
+  const scan = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const file = path.join(dir, name);
+      if (statSync(file).isDirectory()) scan(file);
+      else assert.ok(!readFileSync(file).includes(Buffer.from(marker)), "sign-in words were not saved");
+    }
+  };
+  scan(TEST_DIR);
+  assert.equal((await r.request("/safety/pin", "POST", { pin: "1357" }, true)).status, 403);
+  assert.equal((await r.request("/safety/pin", "POST", { pin: "1357" })).status, 200);
+  assert.ok(r.calls.find((c) => c.route === "/pin")?.authorization?.includes("cd".repeat(32)));
+  assert.equal((await r.request("/safety", "POST", { level: "paused", minutes: 2 })).status, 200);
+  await until(() => r.guard.level() === "paused");
+  assert.equal((await r.request("/safety")).data.level, "paused");
+  assert.equal((await r.request("/bots/pebble/engine")).data.status, "stopped");
+  const refused = await r.request("/safety", "POST", { level: "open" }, true);
+  assert.equal(refused.status, 403); assert.match(refused.data.error, /PIN/);
+  assert.equal((await r.request("/safety", "POST", { level: "open", pin: "1357" }, true)).status, 200);
+  await until(() => r.guard.level() === "open");
+  await until(() => db.prepare("SELECT value FROM settings WHERE key='team:restart-needed'").get()?.value === "no");
+  r.gateway.options.authenticated = false;
+  let signStatus = (await r.request("/bots/pebble/engine")).data.status;
+  const signDeadline = Date.now() + 5000;
+  while (signStatus === "starting" && Date.now() < signDeadline) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    signStatus = (await r.request("/bots/pebble/engine")).data.status;
+  }
+  assert.equal(signStatus, "not_signed_in");
+  assert.match(r.files.get("/bots/travel/file/config.yaml")!, /test-model/, "settings changed during startup are applied");
+  r.gateway.options.authenticated = true;
+  await until(() => r.hq.turns.live("pebble").state === "idle");
+  const savedBeforeTest = db.prepare("SELECT COUNT(*) n FROM bot_rows WHERE bot='pebble'").get()?.n;
+  const asked = await r.request("/bots/pebble/messages", "POST", { text: "Hello", test: true });
+  assert.equal(asked.status, 202); assert.equal(typeof asked.data.job_id, "string");
+  await until(() => r.gateway.requests.some((q) => q.path.endsWith("/v1/responses")));
+  await until(() => r.hq.turns.live("pebble").state === "idle");
+  const sent = r.gateway.requests.find((q) => q.path === "/p/pebble/v1/responses" && q.body.input === "Hello")!;
+  assert.ok(String(sent.body.instructions).startsWith(standingFor(listBots()[0])));
+  assert.match(String(sent.body.conversation), /lh-pebble-test-/);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM bot_rows WHERE bot='pebble'").get()?.n, savedBeforeTest);
+  assert.equal((await r.request("/bots/pebble/messages", "POST", { text: "" })).status, 400);
+  assert.equal((await r.request("/bots/pebble/messages", "POST", { text: "hi", images: ["file:///private"] })).status, 400);
+  assert.equal((await r.request("/bots/pebble/messages", "POST", { text: "Hello again" })).status, 202);
+  await until(() => r.hq.turns.live("pebble").state === "idle");
+  const rows = (await r.request("/bots/pebble/rows")).data;
+  assert.ok(rows.rows.length >= 2); assert.ok(rows.rev > 0);
+  assert.equal((await r.request(`/bots/pebble/rows?after=${rows.rev}`)).data.rows.length, 0);
+  assert.equal((await r.request("/bots/pebble/rows?after=no")).status, 400);
+  assert.equal((await r.request("/bots/pebble/fresh", "POST", {})).data.generation, 1);
+  assert.equal((await r.request("/bots/pebble/rows")).data.rows.length, 0);
+  assert.ok((await r.request("/bots/pebble/rows?generation=0")).data.rows.length >= 2);
+  assert.equal((await r.request("/bots/pebble/stop", "POST", {})).status, 200);
+  const room = await r.request("/rooms/ask", "POST", { bots: ["pebble", "tim"], text: "Say hello" });
+  assert.equal(room.status, 200); assert.equal(room.data.length, 2);
+  assert.equal((await r.request("/bots/travel", "DELETE", undefined, true)).status, 403);
+  assert.equal((await r.request("/bots/travel", "DELETE")).status, 200);
+  assert.equal((await r.request("/bots/tim", "DELETE")).status, 200);
+  assert.equal((await r.request("/bots/pebble", "DELETE")).status, 409);
+  assert.equal((await r.request("/bots/missing/engine")).status, 404);
+  assert.equal((await r.request("/bots/pebble/engine", "POST", {})).status, 405);
+  console.log("hq-api-routes: ok (team pages, rights, sign-in, rows, messages and safety)");
+} finally { await r.close(); }

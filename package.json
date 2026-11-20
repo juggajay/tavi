@@ -1,0 +1,43 @@
+{
+  "name": "tavi",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A personal AI system with a team of bots.",
+  "scripts": {
+    "setup": "node scripts/tavi.mjs setup",
+    "tavi": "node scripts/tavi.mjs",
+    "v3": "node scripts/v3-dev.mjs",
+    "guard": "tsx src/guard/main.ts",
+    "dev": "node scripts/dev.mjs",
+    "dev:raw": "tsx watch src/gateway/server.ts",
+    "dev:ui": "npm --prefix ui run dev",
+    "start": "tsx src/gateway/server.ts",
+    "check": "tsc --noEmit && tsc --noEmit -p ui",
+    "test": "node tests/run.mjs",
+    "test:ui": "node tests/run.mjs --ui",
+    "build:ui": "npm --prefix ui ci --no-audit --no-fund && npm --prefix ui run build",
+    "build:helper": "node scripts/build-helper.mjs",
+    "helper:pair": "tsx src/remote/pair.ts pair",
+    "helper:unpair": "tsx src/remote/pair.ts unpair",
+    "shortcut:pair": "tsx src/gateway/shortcut-pair.ts pair",
+    "shortcut:unpair": "tsx src/gateway/shortcut-pair.ts unpair",
+    "brain:test": "tsx src/brain/try.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.318",
+    "@playwright/mcp": "0.0.83",
+    "dotenv": "^18.0.9",
+    "web-push": "^3.6.7",
+    "ws": "^8.22.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/web-push": "^3.6.4",
+    "@types/ws": "^8.18.2",
+    "playwright-core": "^1.49.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

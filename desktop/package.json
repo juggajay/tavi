@@ -1,0 +1,32 @@
+{
+  "name": "tavi-desktop",
+  "productName": "Tavi",
+  "version": "1.0.0",
+  "description": "Tavi for Windows: the desktop app window and tray icon",
+  "author": "Tavi",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "app.tavi.desktop",
+    "productName": "Tavi",
+    "files": ["main.js", "earlier.cjs", "preload.js", "starting.html", "app-config.json", "assets/**"],
+    "directories": { "output": "dist" },
+    "win": { "target": "nsis", "icon": "assets/tavi.ico" },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Tavi",
+      "runAfterFinish": true
+    }
+  },
+  "devDependencies": {
+    "electron": "44.9.3",
+    "electron-builder": "26.17.0"
+  }
+}

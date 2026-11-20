@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "This bot's computer",
+  "version": "1.0.0",
+  "description": "The home page and programs on this bot's own computer.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA02E329SCbyXTPe26xqus9jtt1VvTtnN2NQp2uaZDxaxECBede+3q8w+h0T5JqXHcHBW1RgD920mpOOObMEDBM45MSNKthQW+ESGNSfRUlz6tcHvZXeV/iueqYpvOIVqQ788Ikp80x8CBJfGi6xipoJkkJxzlYaqtPjFGtLk+eS7q6TGoReBwRIAkP6W9T1kgv1vghbIRumDoj2UtkUH+vw+TsicLsdW9qX4OllnDWIhQNUMdeoKHNkdMyZ3gw+wwZCcagKHIkZlzsJ1TspSXskQ7Iz+oUDXyTOskAeCSM4Yg4hxv741ef/nyPkX3Tb4qdJFavN3WQqxDH5Y5BNvJIwIDAQAB",
+  "permissions": ["nativeMessaging"],
+  "chrome_url_overrides": { "newtab": "home.html" },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; frame-src 'none'; form-action https://www.google.com" }
+}

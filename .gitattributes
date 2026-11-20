@@ -1,0 +1,10 @@
+# One kind of line ending everywhere, on every PC, so a file and a copy made from it always match
+# byte for byte (a test that compares them failed on Windows before this).
+* text=auto eol=lf
+# Windows' own script kinds keep Windows line endings.
+*.vbs text eol=crlf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+# Recorded engine replies are kept exactly as they arrived.
+tests/fixtures/hermes/* -text

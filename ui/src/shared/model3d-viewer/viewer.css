@@ -1,0 +1,22 @@
+/* The 3D model viewer (Stage 9.4). The background comes from the colour tokens, so it works in light and dark; the
+   sizes take the colour of the day. Loaded with the viewer, never in the phone's first load. */
+.m3{position:relative;display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;background:var(--bg);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.m3-stage{position:relative;flex:1;min-height:0;background:radial-gradient(120% 95% at 50% 38%,var(--raised) 0%,var(--bg) 72%)}
+.m3-gl,.m3-dims{position:absolute;inset:0;width:100%;height:100%;display:block}
+.m3-gl{touch-action:none;cursor:grab}
+.m3-gl:active{cursor:grabbing}
+.m3-dims{pointer-events:none}
+.m3-bar{position:absolute;z-index:2;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:8px;pointer-events:none}
+.m3-btn{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px 0 10px;border:0;border-radius:999px;font:500 13.5px var(--f-ui);color:var(--ink-2);background:color-mix(in srgb,var(--raised) 88%,transparent);box-shadow:0 0 0 1px var(--line),0 2px 10px -4px var(--shadow);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);-webkit-tap-highlight-color:transparent;transition:background-color .18s,color .18s,box-shadow .18s,transform .12s;cursor:pointer}
+.m3-btn svg{width:17px;height:17px;flex:none}
+.m3-btn:active{transform:scale(.96)}
+.m3-btn[aria-pressed="true"]{color:var(--accent-ink);background:color-mix(in srgb,var(--accent-soft) 70%,var(--raised));box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent),0 2px 10px -4px var(--shadow)}
+@media (hover:hover){.m3-btn:hover{color:var(--ink)}}
+.m3-foot{flex:none;padding:8px 16px 12px;text-align:center;background:var(--bg)}
+.m3-foot p{margin:0}
+.m3-note{font-size:14px;line-height:1.4;color:var(--ink-2);margin-bottom:4px!important}
+.m3-fixed{font-size:12px;color:var(--ink-3);letter-spacing:.01em}
+.m3-offer{position:absolute;z-index:3;left:50%;top:12px;transform:translateX(-50%);max-width:calc(100% - 32px);padding:8px 14px;border:0;border-radius:999px;font:500 13.5px var(--f-ui);color:var(--on-accent);background:var(--accent);box-shadow:0 4px 16px -6px var(--shadow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;animation:m3in .25s var(--ease-out)}
+@keyframes m3in{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:reduce){.m3-btn,.m3-offer{transition:none;animation:none}}
+.m3-cant{position:absolute;inset:0;margin:0;display:grid;place-items:center;padding:24px;text-align:center;font-size:15px;color:var(--ink-2)}

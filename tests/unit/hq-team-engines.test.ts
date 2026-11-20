@@ -1,0 +1,82 @@
+import "../isolate.js";
+import assert from "node:assert/strict";
+import { mock } from "node:test";
+import { rig, until } from "./hq-api-fixture.test.js";
+import { teamTools } from "../../src/hq/team/index.js";
+import { newTurnCtx } from "../../src/brain/turn.js";
+import { getBot, toolboxToken } from "../../src/hq/bots.js";
+import { matchChoice, readEngineOptions } from "../../src/hq/team/engines.js";
+import { db } from "../../src/store/db.js";
+
+const r = await rig();
+const original = globalThis.fetch;
+const fetchMock = mock.method(globalThis, "fetch", async (...args: Parameters<typeof fetch>) => {
+  const result = await original(...args);
+  if (!String(args[0]).endsWith("/api/model/options")) return result;
+  const body = await result.json() as { providers: { slug: string; models?: string[] }[] };
+  for (const p of body.providers) p.models = p.slug === "anthropic" ? ["claude-opus-5-5", "claude-sonnet-5-2"] : ["gpt-6.1-sol", "gpt-6.2-sol", "gpt-6-astra"];
+  return Response.json(body);
+});
+const ctx = newTurnCtx(); ctx.bot = "pebble";
+const call = async (name: string, args: Record<string, unknown> = {}) => {
+  const tool = teamTools(ctx).find((t) => t.name === name)!; assert.ok(tool);
+  const words = ((await tool.handler(args, {})).content[0] as { text: string }).text;
+  try { return JSON.parse(words); } catch { return words; }
+};
+try {
+  await until(() => db.prepare("SELECT value FROM settings WHERE key='team:restart-needed'").get()?.value === "no");
+  const beforeApprovals = db.prepare("SELECT COUNT(*) n FROM approvals").get()?.n;
+  const list = await call("list_engines");
+  assert.equal(list.subscriptions.length, 2);
+  assert.equal(list.bots.find((b: { bot: string }) => b.bot === "tim").company, "OpenAI");
+  assert.ok(list.subscriptions.find((s: { company: string }) => s.company === "Claude").models.includes("claude-opus-5-5"));
+  const input = { bot: "Tim", company: "OpenAI", model: "6.1 sol", effort: "xhigh" };
+  const changed = await call("set_engine", input);
+  assert.equal(changed.after.primary.model, "gpt-6.1-sol");
+  assert.equal(changed.after.primary.effort, "xhigh");
+  assert.equal(changed.before.primary.effort, "medium");
+  assert.match((await call("set_engine", { ...input, model: "sol" })).error, /gpt-6.1-sol.*gpt-6.2-sol/);
+  assert.match((await call("set_engine", { ...input, effort: "strong" })).error, /minimal, low, medium, high, xhigh/);
+  assert.match((await call("set_engine", { ...input, model: "not a model" })).error, /No known/);
+  assert.equal(getBot("tim")!.primary.effort, "xhigh");
+  const opus = await call("set_engine", { ...input, company: "Claude", model: "OPUS", effort: "low", fallbacks: [{ company: "OpenAI", model: "astra", effort: "medium" }] });
+  assert.equal(opus.after.primary.model, "claude-opus-5-5");
+  assert.equal(opus.after.fallbacks[0].model, "gpt-6-astra");
+  r.gateway.options.authenticated = { anthropic: false, "openai-codex": true };
+  const signedOut = await call("set_engine", { ...input, company: "Claude", model: "opus", effort: "minimal" });
+  assert.match(signedOut.warning, /Sign in to Claude/);
+  assert.equal(getBot("tim")!.primary.effort, "minimal");
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM approvals").get()?.n, beforeApprovals);
+  const queued = await r.request("/bots/tim/messages", "POST", { text: "Use the new choice", test: true });
+  await until(() => r.hq.turns.live("tim").state === "idle");
+  assert.ok(r.hq.testRows("tim", queued.data.job_id).some((r) => r.body.kind === "message" && r.body.from === "bot"), JSON.stringify(r.hq.testRows("tim", queued.data.job_id)));
+  const request = r.gateway.requests.findLast((q) => q.path === "/p/tim/v1/responses")!;
+  assert.equal(request.body.provider, "anthropic");
+  assert.equal(request.body.model, "claude-opus-5-5");
+  assert.deepEqual(request.body.model_options, { reasoning_effort: "minimal" });
+  const specialist = newTurnCtx(); specialist.bot = "tim";
+  assert.ok(!teamTools(specialist).some((t) => ["set_engine", "list_engines"].includes(t.name)));
+  const toolbox = r.hq.trialState().toolboxAddress!;
+  const listed = async (bot: string) => {
+    const response = await fetch(`${toolbox}/mcp/${bot}/team`, { method: "POST", headers: { Authorization: `Bearer ${toolboxToken(bot)}`, "Content-Type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }) });
+    return (await response.json()).result.tools as { name: string }[];
+  };
+  assert.ok((await listed("pebble")).some((t) => t.name === "set_engine"));
+  assert.ok(!(await listed("tim")).some((t) => t.name === "set_engine"));
+  ctx.test = true;
+  assert.match(JSON.stringify(await call("set_engine", { ...input, effort: "high" })), /nothing was saved/);
+  assert.equal(getBot("tim")!.primary.effort, "minimal");
+  ctx.test = false;
+  r.gateway.options.firstDelayMs = 80;
+  r.hq.ask("tim", { text: "First queued choice", via: "typed", origin: null, test: true });
+  await until(() => r.gateway.requests.some((q) => q.body.input === "First queued choice"));
+  r.hq.ask("tim", { text: "Second queued choice", via: "typed", origin: null, test: true });
+  await call("set_engine", { ...input, model: "astra", effort: "high" });
+  await until(() => r.hq.turns.live("tim").state === "idle");
+  const second = r.gateway.requests.find((q) => q.body.input === "Second queued choice")!;
+  assert.equal(second.body.model, "gpt-6-astra", "a waiting message takes the choice held when its turn starts");
+  assert.deepEqual(second.body.model_options, { reasoning_effort: "high" });
+  const options = readEngineOptions({ providers: [{ id: "anthropic", authenticated: true }], models: { anthropic: [{ id: "claude-opus-5-5" }] } });
+  assert.equal(matchChoice({ company: "Claude", model: "opus", effort: "high" }, options).model, "claude-opus-5-5");
+  console.log("Engine choices: loose names, unclear names, effort, signed-out warnings, rights and the next gateway request pass.");
+} finally { fetchMock.mock.restore(); await r.close(); }

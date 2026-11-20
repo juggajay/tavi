@@ -1,0 +1,35 @@
+@import "./fonts.css";
+@import "./tokens.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.45 var(--f-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+.mono {
+  font-family: var(--f-mono);
+  letter-spacing: -0.01em;
+}
+
+/* Web-results lists (places, businesses, pages): each row is a link that opens in the browser */
+.lks{list-style:none;margin:0;padding:0}
+.lk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px 4px;border-top:1px solid var(--line);color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+.lks li:last-child .lk{border-bottom:1px solid var(--line)}
+a.lk:active{background:var(--sunk)}
+.lk-t{min-width:0;display:flex;flex-direction:column;gap:3px}
+.lk-t b{font:600 16.5px/1.3 var(--f-ui);letter-spacing:-.01em;color:var(--ink)}
+.lk-d{font-size:14.5px;line-height:1.4;color:var(--ink-2)}
+.lk-m{font-size:13.5px;line-height:1.4;color:var(--ink-3)}
+.lk-u{margin-top:2px;font:500 13.5px/1.3 var(--f-ui);color:var(--accent-ink);overflow-wrap:anywhere}
+.lk .ext{width:16px;height:16px;margin-top:3px;color:var(--ink-3)}
+a.lk:hover .ext,a.lk:hover b{color:var(--accent-ink)}

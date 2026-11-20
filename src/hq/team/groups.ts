@@ -1,0 +1,16 @@
+export const toolGroups = [
+  { id: "site", name: "Examples", what: "Try small examples and check how tools behave." },
+  { id: "mail", name: "Mail", what: "Find and read mail, and prepare drafts for your approval." },
+  { id: "memory", name: "Notebook", what: "Save and recall this bot's own notes." },
+  { id: "drawings", name: "Drawings", what: "Find, read and show your drawings." },
+  { id: "actions", name: "Actions", what: "Prepare outside actions and ask for your approval." },
+  { id: "show", name: "Screen", what: "Put answers and finished work on your screen." },
+  { id: "files", name: "Files", what: "Find and read files in the folders you've allowed." },
+  { id: "reference", name: "Reference books", what: "Find and read the reference books you've added." },
+  { id: "calc", name: "Calculators", what: "Work out numbers and check calculations." },
+  { id: "model", name: "3D models", what: "Make, check and show 3D models." },
+  { id: "shop", name: "Detailed drawings", what: "Prepare and check detailed drawings." },
+  { id: "computers", name: "Other computers", what: "Find and read allowed files on your paired computers." },
+  { id: "brainlink", name: "The Brain", what: "Ask The Brain questions and read its results." },
+  { id: "team", name: "Team", what: "Set up bots, hand over jobs and return results." },
+];

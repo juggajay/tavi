@@ -1,0 +1,11 @@
+/* Tim, the round table's guest (Stage 17.3). His colours are set by tim.ts (--tim-1 / --tim-2 and his text colour for
+   each theme); the fallbacks are Tuesday's teal. He sits back a little (less colour) until he speaks or thinks. */
+:root{--tim-1:#8EE2DC;--tim-2:#0C8A8E;--tim-ink:var(--tim-ink-l,#0A7579)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--tim-ink:var(--tim-ink-d,#3AA9A9)}}
+:root[data-theme="dark"]{--tim-ink:var(--tim-ink-d,#3AA9A9)}
+.lh-tim .c-shadow{fill:var(--shadow)}
+.lh-tim .c-peye{fill:var(--pebble-eye)}
+.lh-tim .c-white{fill:#fff}
+.lh-tim{filter:saturate(calc(.62 + .38 * var(--tim-lit,0)));transition:opacity .4s var(--ease)}
+.char-host.mini .lh-tim [data-detail]{display:none}
+@media (prefers-reduced-motion: reduce){.lh-tim{transition:none}}

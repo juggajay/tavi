@@ -1,0 +1,15 @@
+node_modules/
+.env
+data*/
+.venv/
+__pycache__/
+*.log
+dist/
+dist-tavi/
+web/dist/
+desktop/app-config.json
+tests/.tmp/
+tests/ui/shots/
+scripts/public/private-words.txt
+scripts/public/last.json
+scripts/public/last.json.tmp

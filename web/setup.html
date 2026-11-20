@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tavi</title>
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<link rel="manifest" href="/setup.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Desktop control centre, modelled on the Claude / Codex desktop apps: quiet sidebar, settings-style rows. */
+:root{
+  --bg:#F7F7F5; --side:#EFEFEC; --surface:#FFFFFF; --ink:#1B1D1F; --muted:#6A6E6B; --line:#E3E3DF; --hover:#E8E8E4;
+  --accent:#E8611A; --on-accent:#1B0D04; --ok:#2E8A55; --warn:#B7791F; --bad:#C2412D;
+  --ok-soft:rgba(46,138,85,.12); --warn-soft:rgba(183,121,31,.14); --bad-soft:rgba(194,65,45,.12);
+  --f:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Geist Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#151719; --side:#1B1E20; --surface:#202326; --ink:#ECEDEB; --muted:#9A9F9C; --line:#2C3033; --hover:#26292C;
+  --accent:#FF7A33; --ok:#5CC28A; --warn:#E3B04B; --bad:#F07A6A;
+  --ok-soft:rgba(92,194,138,.14); --warn-soft:rgba(227,176,75,.14); --bad-soft:rgba(240,122,106,.14);
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14.5px/1.5 var(--f);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100%}
+aside{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 12px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:600;letter-spacing:-.01em}
+.mark{width:26px;height:26px;flex:none}
+nav{display:grid;gap:2px}
+nav a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--muted);font-weight:500}
+nav a:hover{background:var(--hover);color:var(--ink)}
+nav a[aria-current="page"]{background:var(--hover);color:var(--ink)}
+.side-foot{margin-top:auto;padding:10px;display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.live{display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:500}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+
+main{padding:40px 48px 64px;min-width:0}
+.page{max-width:760px}
+.page[hidden]{display:none}
+h1{font-size:22px;font-weight:600;letter-spacing:-.015em;margin:0 0 4px}
+.lede{color:var(--muted);margin:0 0 28px;max-width:62ch}
+h2{font-size:13px;font-weight:600;color:var(--muted);margin:28px 0 10px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px}
+.row + .row,#claude-rows > div + div,#claude-rows > div + .row{border-top:1px solid var(--line)}
+.row .ic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-weight:600;font-size:14px;background:var(--hover);color:var(--ink)}
+.row .ic.g{background:#EA4335;color:#fff}.row .ic.m{background:#0F6CBD;color:#fff}.row .ic.o{background:#0B66C3;color:#fff}.row .ic.c{background:#188038;color:#fff}.row .ic.d{background:#F4B400;color:#202124}
+.perm{display:flex;gap:16px;align-items:center}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);cursor:pointer;user-select:none}
+.sw input{appearance:none;-webkit-appearance:none;margin:0;width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .3s cubic-bezier(.32,.72,0,1)}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.18);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.sw input:checked{background:var(--ink)}
+.sw input:checked::after{transform:translateX(14px)}
+.sw input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sw input:disabled{opacity:.5;cursor:wait}
+.can{padding:0 18px 14px 68px;font-size:13.5px;color:var(--muted)}
+.can summary{cursor:pointer;width:max-content}
+.can b{display:block;margin:10px 0 2px;color:var(--ink);font-weight:500}
+.can ul{margin:0;padding-left:18px}
+.editor{width:100%;min-height:360px;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical}
+.editor:focus{outline:2px solid var(--ink);outline-offset:1px}
+.count{margin-left:auto;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.count.over{color:var(--bad)}
+.h-note{font-weight:400;font-size:13px;color:var(--muted);margin-left:8px}
+.card-preview{margin:0;padding:14px 16px;white-space:pre-wrap;font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted)}
+details.other{margin-top:18px}
+details.other>summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 2px;list-style-position:inside}
+details.other>.panel{margin-top:10px}
+.row b{display:block;font-weight:600}
+.row span.sub{display:block;color:var(--muted);font-size:13.5px}
+.row .right{display:flex;align-items:center;gap:10px}
+.row.plain{grid-template-columns:minmax(0,1fr) auto}
+
+.chip{font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.off{background:var(--hover);color:var(--muted)}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 14px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none;color:inherit}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9}
+.btn:disabled{opacity:.45;cursor:default}
+
+.phone{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px}
+.phone code{font:500 15px var(--mono);overflow-wrap:anywhere}
+.phone p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+
+.setup-box{padding:18px 18px 20px;display:grid;gap:14px;border-top:1px solid var(--line);background:var(--bg)}
+.setup-box p{margin:0;color:var(--muted);max-width:66ch}
+.steps{margin:0;padding-left:20px;display:grid;gap:8px}
+.steps li{padding-left:4px}
+.steps a{color:var(--accent);text-decoration:none;font-weight:500}
+.steps a:hover{text-decoration:underline}
+.form{display:grid;gap:12px;max-width:520px}
+.field{display:grid;gap:6px}
+.field label{font-size:13px;font-weight:500}
+.field input{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 12px;font-family:var(--mono);font-size:13.5px}
+.field input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.form .actions,.setup-box .actions{display:flex;gap:10px;align-items:center}
+.form .err{color:var(--bad);font-size:13.5px}
+
+.banner{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;margin:0 0 18px;font-size:14px}
+.banner.ok{background:var(--ok-soft)}.banner.bad{background:var(--bad-soft)}
+.banner[hidden]{display:none}
+
+.log{list-style:none;margin:0;padding:0}
+.log li{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;padding:11px 16px;border-top:1px solid var(--line);font-size:14px}
+.log li:first-child{border-top:0}
+.log time{font:400 12.5px/1.6 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.log small{display:block;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.empty{padding:22px 16px;color:var(--muted)}
+.note{color:var(--muted);font-size:13.5px;margin:12px 2px 0}
+
+@media (max-width:820px){.shell{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;align-items:center;gap:8px;overflow-x:auto}.side-foot{display:none}nav{display:flex}main{padding:24px 16px 48px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><path d="M16 56 C15 32 26 17 49 16 C72 14 86 29 86 53 C88 76 76 84 51 84 C29 85 16 77 16 56 Z" fill="#EF6A1F"/><ellipse cx="40" cy="50" rx="3.4" ry="6.2" fill="#1A120C"/><ellipse cx="58" cy="50" rx="3.4" ry="6.2" fill="#1A120C"/></svg>
+      Tavi
+    </div>
+    <nav aria-label="Setup sections">
+      <a href="#overview" data-page="overview">Overview</a>
+      <a href="#connections" data-page="connections">Connections</a>
+      <a href="#personality" data-page="personality">Personality</a>
+      <a href="#drawings" data-page="drawings">Drawings</a>
+      <a href="#proactive" data-page="proactive">Proactive</a>
+      <a href="#activity" data-page="activity">Activity</a>
+      <a href="#voice" data-page="voice">Voice &amp; brain</a>
+    </nav>
+    <div class="side-foot">
+      <div class="live"><i></i><span id="sf-state">Running</span></div>
+      <div id="sf-since"></div>
+    </div>
+  </aside>
+
+  <main>
+    <!-- Overview -->
+    <section class="page" id="p-overview">
+      <h1>Overview</h1>
+      <p class="lede">Everything is set up and running on this PC. Your phone is where you talk to it.</p>
+      <h2>Your phone</h2>
+      <div class="panel phone">
+        <div><code id="phone-url">Checking…</code><p>Open this on your iPhone with Tailscale switched on. Tip: Share, then Add to Home Screen.</p></div>
+        <button class="btn" type="button" id="copy-url">Copy</button>
+      </div>
+      <h2>Status</h2>
+      <div class="panel" id="status-rows"></div>
+    </section>
+
+    <!-- Connections -->
+    <section class="page" id="p-connections" hidden>
+      <h1>Connections</h1>
+      <p class="lede">What Tavi can use, and what it's allowed to do with each. Nothing is ever sent or changed until you tap Approve on your phone.</p>
+      <div class="banner ok" id="banner-ok" hidden></div>
+      <div class="banner bad" id="banner-bad" hidden></div>
+      <div class="panel" id="claude-rows"></div>
+      <p class="note"><b>Read</b> lets Tavi look things up. <b>Write</b> lets it make changes when you ask, like sending an email or adding a calendar event, but every single one waits for you to tap Approve on your phone. Saving a draft doesn't need a tap.<br>These come through your Claude account: click Connect, sign in on claude.ai, then come back here and press Check again.</p>
+      <h2>Websites <span class="h-note">its own browser on this PC</span></h2>
+      <div class="panel" id="web-rows"></div>
+      <p class="note">For a site you list here, you log in yourself in the window that opens. Tavi never sees, types or stores your password: the site just keeps that browser signed in, like your own browser does, in a profile on this PC that Edge encrypts with your Windows account. If it offers to save your password, say no. Remove logs it out of that site; Forget all logins wipes every one. Jobs for a saved site can only use that site. For any other site it uses a fresh browser with no logins. Either way, it asks your go-ahead on the phone, with a screenshot, before anything is ordered, paid, booked, sent or submitted.</p>
+      <h2>More accounts</h2>
+      <div class="panel" id="conn-other"></div>
+      <details class="other" id="own-gmail">
+        <summary>Another way: connect Gmail with your own Google app</summary>
+        <div class="panel" id="conn-rows"></div>
+        <p class="note">Disconnecting removes Tavi's access and deletes its saved sign-in from this PC.</p>
+      </details>
+    </section>
+
+    <!-- Personality -->
+    <section class="page" id="p-personality" hidden>
+      <h1>Personality</h1>
+      <p class="lede">Two plain files. One is who Tavi is and how it talks; the other is what it knows about you. Safety rules aren't in either: approvals and permissions are fixed in code, and nothing here can loosen them.</p>
+      <h2>Its name</h2>
+      <div class="panel"><div class="setup-box">
+        <form class="form" id="pf-name-form" autocomplete="off">
+          <div class="field"><label for="pf-name">What you call it. It will ask you for one once you've chatted a bit, or just tell it any time.</label><input id="pf-name" placeholder="Not named yet" maxlength="24" spellcheck="false"></div>
+          <div class="actions"><button class="btn primary" type="submit">Save</button><span class="err" id="pf-name-msg" role="status"></span></div>
+        </form>
+      </div></div>
+      <h2>Waiting for your OK</h2>
+      <div class="panel" id="pf-held"></div>
+      <h2>Tavi <span class="h-note">SOUL.md · yours</span></h2>
+      <div class="panel"><div class="setup-box">
+        <p>Edit it freely. When you ask Tavi to talk differently ("be blunter"), it suggests a change here and on your phone, and it only applies after your tap.</p>
+        <textarea class="editor" id="pf-soul" spellcheck="false" aria-label="SOUL.md"></textarea>
+        <div class="actions"><button class="btn primary" type="button" id="pf-soul-save">Save</button><span class="err" id="pf-soul-msg" role="status"></span><span class="count" id="pf-soul-count"></span></div>
+      </div></div>
+      <h2>About you <span class="h-note">USER.md · Tavi keeps it up to date</span></h2>
+      <div class="panel"><div class="setup-box">
+        <p>Tavi adds short dated lines as you talk. Anything it learned from an email or document waits above for your OK. Fix or delete anything here, or just tell it "that's wrong".</p>
+        <textarea class="editor" id="pf-user" spellcheck="false" aria-label="USER.md"></textarea>
+        <div class="actions"><button class="btn primary" type="button" id="pf-user-save">Save</button><span class="err" id="pf-user-msg" role="status"></span><span class="count" id="pf-user-count"></span></div>
+      </div></div>
+      <h2>What the voice is told</h2>
+      <div class="panel"><pre class="card-preview" id="pf-card"></pre></div>
+      <p class="note">Made automatically from the file above whenever it changes, so the voice and the brain sound like the same person.</p>
+      <h2>Recent changes</h2>
+      <div class="panel" id="pf-changes"></div>
+    </section>
+
+    <!-- Drawings -->
+    <section class="page" id="p-drawings" hidden>
+      <h1>Drawings</h1>
+      <p class="lede">Every sheet Tavi can read. Drop PDFs or zipped sets into a job folder here and they're indexed automatically.</p>
+      <div class="panel phone"><div><code id="dw-dir"></code><p>One folder per job. Zips are unpacked for you. Loose files go in the inbox.</p></div><button class="btn" type="button" id="dw-copy">Copy</button></div>
+      <h2>Jobs</h2>
+      <div class="panel" id="dw-projects"></div>
+      <h2 id="dw-reg-title">Register</h2>
+      <div class="panel" id="dw-sheets"></div>
+    </section>
+
+    <!-- Proactive -->
+    <section class="page" id="p-proactive" hidden>
+      <h1>Proactive</h1>
+      <p class="lede">What Tavi does without being asked. You can also change all of this by just telling it, e.g. "every Friday at 2, list my unread messages".</p>
+      <h2>Routines</h2>
+      <div class="panel" id="pr-routines"></div>
+      <h2>Follow-ups it's tracking</h2>
+      <div class="panel" id="pr-commitments"></div>
+      <h2>Notifications</h2>
+      <div class="panel">
+        <div class="row plain"><div><b>Rules</b><span class="sub" id="pr-rules"></span></div><div class="right"></div></div>
+        <div class="setup-box">
+          <form class="form" id="rules-form" autocomplete="off">
+            <div class="field"><label for="q-start">Quiet from (leave empty for no quiet hours)</label><input id="q-start" placeholder="e.g. 19:00" inputmode="numeric"></div>
+            <div class="field"><label for="q-end">Quiet until</label><input id="q-end" placeholder="e.g. 05:30" inputmode="numeric"></div>
+            <div class="field"><label for="q-max">Most notifications per day (0 = no limit)</label><input id="q-max" type="number" min="0" max="100"></div>
+            <div class="actions"><button class="btn primary" type="submit">Save</button><span class="err" id="rules-msg" role="status"></span></div>
+          </form>
+        </div>
+        <div class="row plain"><div><b>Phone alerts</b><span class="sub" id="pr-push"></span></div><div class="right"><button class="btn" type="button" id="push-test">Send a test</button></div></div>
+      </div>
+      <h2>Noticed, not tracked yet</h2>
+      <div class="panel" id="pr-offers"></div>
+      <h2>Recent days</h2>
+      <div class="panel" id="pr-days"></div>
+      <h2>What it remembers</h2>
+      <div class="panel" id="pr-memories"></div>
+    </section>
+
+    <!-- Activity -->
+    <section class="page" id="p-activity" hidden>
+      <h1>Activity</h1>
+      <p class="lede">Everything Tavi has done, newest first. This log lives only on this PC.</p>
+      <div class="panel"><ul class="log" id="log"></ul></div>
+    </section>
+
+    <!-- Voice & brain -->
+    <section class="page" id="p-voice" hidden>
+      <h1>Voice &amp; brain</h1>
+      <p class="lede">The voice talks and listens. The brain does the actual work. You can change these in the .env file for now.</p>
+      <div class="panel" id="vb-rows"></div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+let appName = "Tavi";
+try {
+  const reply = await fetch('/api/hq/state', { signal: AbortSignal.timeout(4000) });
+  const state = reply.ok ? await reply.json() : null;
+  if (state?.on !== true) appName = "Tavi";
+} catch { appName = "Tavi"; }
+// Choose the app's name before filling any of its pages.
+const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+while (walk.nextNode()) {
+  const node = walk.currentNode;
+  if (!node.parentElement?.closest('script,style')) node.textContent = node.textContent.replaceAll('Tavi', appName);
+}
+document.title = appName;
+document.querySelector('meta[name="apple-mobile-web-app-title"]')?.setAttribute('content', appName);
+for (const node of document.querySelectorAll('[aria-label],[placeholder]')) {
+  for (const attr of ['aria-label','placeholder']) if (node.hasAttribute(attr)) node.setAttribute(attr, node.getAttribute(attr).replaceAll('Tavi', appName));
+}
+if (appName !== 'Tavi') {
+  const manifest = document.querySelector('link[rel="manifest"]');
+  if (manifest) manifest.setAttribute('href', manifest.getAttribute('href').replace('.webmanifest', '.legacy.webmanifest'));
+}
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let status = null;
+
+/* ---------- navigation ---------- */
+const PAGES = ['overview', 'connections', 'personality', 'drawings', 'proactive', 'activity', 'voice'];
+const currentPage = () => (PAGES.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview');
+function show() {
+  const page = currentPage();
+  PAGES.forEach(p => { $('#p-' + p).hidden = p !== page; });
+  document.querySelectorAll('nav a').forEach(a => a.setAttribute('aria-current', a.dataset.page === page ? 'page' : 'false'));
+  if (page === 'activity') loadActivity();
+  if (page === 'proactive') loadProactive(true);
+  if (page === 'drawings') loadDrawings();
+  if (page === 'personality') loadPersonality(true);
+  if (page === 'connections') loadWebsites();
+}
+
+/* ---------- Personality page: SOUL.md, USER.md, held writes, change log ---------- */
+let pfCaps = { soul: 5000, user: 3000 };
+const pfDirty = { soul: false, user: false };
+async function loadPersonality(fillEditors) {
+  const d = await (await fetch('/api/setup/profile')).json();
+  pfCaps = d.caps;
+  for (const k of ['soul', 'user']) if (fillEditors || !pfDirty[k]) { $('#pf-' + k).value = d[k]; pfDirty[k] = false; pfCount(k); }
+  $('#pf-card').textContent = d.voiceCard;
+  if (fillEditors || document.activeElement !== $('#pf-name')) $('#pf-name').value = d.name || '';
+  $('#pf-held').innerHTML = d.held.length ? d.held.map(h => plainRow(h.target === 'memory' ? 'Remember this?' : 'Add to About you?', esc(h.text),
+    `<button class="btn" data-held="${esc(h.id)}" data-yes="0">No</button><button class="btn primary" data-held="${esc(h.id)}" data-yes="1">Yes</button>`)).join('')
+    : `<div class="empty">Nothing waiting. Things ${appName} picks up from emails or documents wait here for your yes.</div>`;
+  $('#pf-changes').innerHTML = d.changes.length ? d.changes.map(c => plainRow(changeTitle(c), changeSub(c), c.status === 'held' ? chip('warn', 'Waiting') : c.status === 'rejected' ? chip('off', 'Said no') : '')).join('')
+    : '<div class="empty">No changes yet.</div>';
+  document.querySelectorAll('[data-held]').forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    await post('/api/setup/profile/held', { id: b.dataset.held, yes: b.dataset.yes === '1' });
+    loadPersonality(false);
+  });
+}
+$('#pf-name-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const r = await post('/api/setup/profile/name', { name: $('#pf-name').value });
+  const j = await r.json().catch(() => ({}));
+  $('#pf-name-msg').style.color = r.ok ? 'var(--ok)' : 'var(--bad)';
+  $('#pf-name-msg').textContent = r.ok ? 'Saved. Your phone and its voice use it from now on.' : (j.error || 'Could not save');
+  if (r.ok) loadPersonality(false);
+});
+function changeTitle(c) {
+  const file = c.target === 'SOUL.md' ? 'Personality' : c.target === 'USER.md' ? 'About you' : 'Memory';
+  if (c.op === 'name') return `Named it “${c.new}”`;
+  const verb = { add: 'added', patch: 'changed', remove: 'removed', replace: 'edited', remember: 'remembered' }[c.op] || c.op;
+  return `${file} ${verb}`;
+}
+function changeSub(c) {
+  const what = c.op === 'replace' ? '' : c.target === 'memory' ? (() => { try { return JSON.parse(c.new).fact; } catch { return ''; } })() : c.op === 'remove' ? c.old : c.new;
+  return `${what ? `“${esc(what)}” · ` : ''}${esc(c.source)} · ${esc(when(c.created_at))}`;
+}
+function pfCount(k) {
+  const n = $('#pf-' + k).value.length, cap = pfCaps[k];
+  $('#pf-' + k + '-count').textContent = `${n.toLocaleString()} / ${cap.toLocaleString()}`;
+  $('#pf-' + k + '-count').classList.toggle('over', n > cap);
+}
+for (const k of ['soul', 'user']) {
+  $('#pf-' + k).addEventListener('input', () => { pfDirty[k] = true; pfCount(k); $('#pf-' + k + '-msg').textContent = ''; });
+  $('#pf-' + k + '-save').addEventListener('click', async () => {
+    const r = await post('/api/setup/profile/' + k, { text: $('#pf-' + k).value });
+    const d = await r.json().catch(() => ({}));
+    $('#pf-' + k + '-msg').style.color = r.ok ? 'var(--ok)' : 'var(--bad)';
+    $('#pf-' + k + '-msg').textContent = r.ok ? `Saved. ${appName} uses it from the next question.` : (d.error || 'Could not save');
+    if (r.ok) { pfDirty[k] = false; setTimeout(() => loadPersonality(false), 4000); }
+  });
+}
+
+/* ---------- Drawings page ---------- */
+let dwProject = null;
+async function loadDrawings() {
+  const d = await (await fetch('/api/setup/drawings')).json();
+  $('#dw-dir').textContent = d.dir;
+  if (!dwProject || !d.projects.some(p => p.project === dwProject)) dwProject = d.projects[0]?.project ?? null;
+  $('#dw-projects').innerHTML = d.projects.length ? d.projects.map(p => plainRow(p.project,
+    `${p.sheets} sheets from ${p.files} files${p.needs_review ? `, ${p.needs_review} need a revision check` : ''}`,
+    `${p.pending ? chip('warn', `Indexing ${p.ready}/${p.files}`) : p.failed ? chip('bad', `${p.failed} failed`) : chip('ok', 'Ready')}<button class="btn" data-proj="${esc(p.project)}">${p.project === dwProject ? 'Showing' : 'Show'}</button>`)).join('')
+    : '<div class="empty">No drawings yet. Copy a job\'s PDFs (or a zip) into the folder above.</div>';
+  const rows = d.sheets.filter(s => s.project === dwProject);
+  $('#dw-reg-title').textContent = dwProject ? `Register: ${dwProject}` : 'Register';
+  const statusChip = s => s.status === 'current' ? chip('ok', `Rev ${s.revision}`) : s.status === 'superseded' ? chip('off', `Rev ${s.revision} superseded`) : chip('warn', s.revision ? `Rev ${s.revision}?` : 'Rev unknown');
+  $('#dw-sheets').innerHTML = rows.length ? rows.slice(0, 400).map(s => plainRow(`${s.sheet_no || '(no number)'}  ${s.title || ''}`,
+    `${esc(s.discipline || 'Other')} · ${esc(s.file)}${s.page ? ` p${s.page + 1}` : ''} · read from ${esc(s.source)}${s.read_path !== 'text' ? ' · no text layer' : ''}`,
+    statusChip(s))).join('') : '<div class="empty">Nothing indexed yet for this job.</div>';
+  document.querySelectorAll('[data-proj]').forEach(b => b.onclick = () => { dwProject = b.dataset.proj; loadDrawings(); });
+}
+$('#dw-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#dw-dir').textContent); $('#dw-copy').textContent = 'Copied'; setTimeout(() => $('#dw-copy').textContent = 'Copy', 1500); } catch {} });
+
+/* ---------- Proactive page ---------- */
+const when = iso => iso ? new Date(iso).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
+const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+async function loadProactive(fillForm) {
+  const d = await (await fetch('/api/setup/proactive')).json();
+  $('#pr-routines').innerHTML = d.routines.length ? d.routines.map(r => plainRow(r.title,
+    `${esc(r.when)}${r.status === 'active' && r.next_run_at ? `. Next: ${esc(when(r.next_run_at))}` : ''}${r.last_outcome ? `<br>Last: ${esc(r.last_outcome)}` : ''}`,
+    `${r.status === 'paused' ? chip('warn', 'Paused') : ''}<button class="btn" data-r="run" data-id="${esc(r.id)}">Run now</button>` +
+    `<button class="btn" data-r="${r.status === 'paused' ? 'resume' : 'pause'}" data-id="${esc(r.id)}">${r.status === 'paused' ? 'Resume' : 'Pause'}</button>` +
+    (r.builtin ? '' : `<button class="btn" data-r="delete" data-id="${esc(r.id)}">Delete</button>`))).join('')
+    : '<div class="empty">No routines yet. Tell it something like "every weekday at 6:30 tell me today\'s deliveries".</div>';
+  $('#pr-commitments').innerHTML = d.commitments.length ? d.commitments.map(c => plainRow(c.title,
+    [c.owner === 'user' ? 'Yours' : c.owner === 'assistant' ? appName : esc(c.owner), c.counterpart ? `with ${esc(c.counterpart)}` : '', c.due_at ? `due ${esc(when(c.due_at))}` : '', c.site ? esc(c.site) : '', c.muted ? 'not asking (you said stop)' : c.next_check_at ? `asks ${esc(when(c.next_check_at))}` : ''].filter(Boolean).join(', '),
+    `<button class="btn" data-c="done" data-id="${esc(c.id)}">Done</button><button class="btn" data-c="drop" data-id="${esc(c.id)}">Drop</button>`)).join('')
+    : '<div class="empty">Nothing open. When someone promises something, or you ask for a reminder, it shows up here.</div>';
+  $('#pr-offers').innerHTML = d.offers.length ? d.offers.map(o => plainRow(o.title, o.evidence ? `You said: “${esc(o.evidence)}”` : '', '')).join('')
+    : ('<div class="empty">Nothing waiting. When you mention something you need to do and don’t ask it to track it, it shows up here and ' + appName + ' offers to track it.</div>');
+  $('#pr-days').innerHTML = d.days.length ? d.days.map(x => plainRow(x.day, esc(x.notes), '')).join('')
+    : ('<div class="empty">No notes yet. After each conversation goes quiet, ' + appName + ' writes a line about what happened.</div>');
+  $('#pr-memories').innerHTML = d.memories.length ? d.memories.map(m => plainRow(m.subject, esc(m.fact), `<button class="btn" data-m="${esc(m.id)}">Forget</button>`)).join('')
+    : '<div class="empty">Nothing saved yet. Say "remember that…" and it lands here.</div>';
+  $('#pr-rules').textContent = d.rules.charAt(0).toUpperCase() + d.rules.slice(1) + '.' + (d.followups ? ` Follow-ups: ${d.followups}.` : '');
+  $('#pr-push').textContent = d.pushDevices ? `${d.pushDevices} phone${d.pushDevices > 1 ? 's' : ''} set up` : ('Not set up yet. On your iPhone: add ' + appName + ' to the Home Screen, open it, and tap Alerts.');
+  if (fillForm) { $('#q-start').value = d.settings.quiet_start; $('#q-end').value = d.settings.quiet_end; $('#q-max').value = d.settings.max_interruptions; }
+
+  document.querySelectorAll('[data-r]').forEach(b => b.onclick = async () => { b.disabled = true; await post('/api/setup/routine', { id: b.dataset.id, action: b.dataset.r }); if (b.dataset.r === 'run') b.textContent = 'Running…'; setTimeout(() => loadProactive(false), b.dataset.r === 'run' ? 1500 : 0); });
+  document.querySelectorAll('[data-c]').forEach(b => b.onclick = async () => { b.disabled = true; await post('/api/setup/commitment', { id: b.dataset.id, action: b.dataset.c }); loadProactive(false); });
+  document.querySelectorAll('[data-m]').forEach(b => b.onclick = async () => { b.disabled = true; await post('/api/setup/forget', { id: b.dataset.m }); loadProactive(false); });
+}
+$('#rules-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const r = await post('/api/setup/rules', { quiet_start: $('#q-start').value.trim(), quiet_end: $('#q-end').value.trim(), max_interruptions: $('#q-max').value || '0' });
+  const d = await r.json().catch(() => ({}));
+  $('#rules-msg').style.color = r.ok ? 'var(--ok)' : 'var(--bad)';
+  $('#rules-msg').textContent = r.ok ? 'Saved' : (d.error || 'Could not save');
+  if (r.ok) loadProactive(false);
+});
+$('#push-test').addEventListener('click', async () => {
+  const r = await post('/api/setup/push-test', {});
+  const d = await r.json();
+  $('#push-test').textContent = d.devices ? 'Sent' : 'No phone set up yet';
+  setTimeout(() => { $('#push-test').textContent = 'Send a test'; }, 2500);
+});
+addEventListener('hashchange', show);
+
+/* ---------- banners from the Google redirect ---------- */
+const q = new URLSearchParams(location.search);
+if (q.get('connected') === 'gmail') { $('#banner-ok').textContent = 'Gmail is connected. Try asking your phone what came in today.'; $('#banner-ok').hidden = false; }
+if (q.get('error')) { $('#banner-bad').textContent = q.get('error'); $('#banner-bad').hidden = false; }
+if (q.toString()) history.replaceState(null, '', location.pathname + location.hash);
+
+/* ---------- rendering ---------- */
+const chip = (cls, text) => `<span class="chip ${cls}">${esc(text)}</span>`;
+function row(ic, icCls, title, sub, right) {
+  return `<div class="row"><div class="ic ${icCls}">${esc(ic)}</div><div><b>${esc(title)}</b><span class="sub">${sub}</span></div><div class="right">${right}</div></div>`;
+}
+function plainRow(title, sub, right) {
+  return `<div class="row plain"><div><b>${esc(title)}</b><span class="sub">${sub}</span></div><div class="right">${right}</div></div>`;
+}
+
+function renderOverview(s) {
+  $('#phone-url').textContent = s.phoneUrl || 'Tailscale not running';
+  $('#status-rows').innerHTML = [
+    plainRow('Voice', `OpenAI ${esc(s.voice.model)}, voice "${esc(s.voice.name)}"`, s.voice.ready ? chip('ok', s.voice.live ? 'In a call' : 'Ready') : chip('bad', 'No key')),
+    plainRow('Brain', `Claude (${esc(prettyModel(s.brain.model))})${s.brain.subscription ? ', on your Claude subscription' : ''}`,
+      s.brain.apiKeySource === 'unknown' ? chip('off', 'Starting') : s.brain.subscription ? chip('ok', 'Ready') : chip('warn', 'Using an API key')),
+    (() => {
+      const via = (s.claude?.connectors || []).filter(c => c.status === 'connected').map(c => c.label);
+      const all = [...via, ...s.accounts.map(a => `${a.label}: ${a.address}`)];
+      return plainRow('Email & calendar', all.length ? esc(all.join(', ')) : 'Nothing connected yet',
+        s.accounts.some(a => a.status === 'needs_reconnect') ? chip('warn', 'Needs reconnecting') : all.length ? chip('ok', 'Connected') : `<a class="btn" href="#connections">Connect</a>`);
+    })(),
+    plainRow('Starts with Windows', 'Runs in the background when you log in, and restarts itself if it crashes', s.autostart ? chip('ok', 'On') : chip('off', 'Off')),
+    plainRow('Waiting for your OK', 'Emails and actions waiting for you to tap Approve on your phone', s.pendingApprovals ? chip('warn', `${s.pendingApprovals} waiting`) : chip('off', 'None')),
+  ].join('');
+}
+
+function renderConnections(s) {
+  const gmail = s.accounts.find(a => a.provider === 'google');
+  let gmailRight, gmailSub;
+  if (!s.google.configured) { gmailSub = 'Needs the one-time Google setup below first.'; gmailRight = `<button class="btn primary" disabled>Connect</button>`; }
+  else if (!gmail) { gmailSub = 'Search, read and draft your email.'; gmailRight = `<a class="btn primary" href="/oauth/google/start?label=Gmail">Connect</a>`; }
+  else if (gmail.status === 'needs_reconnect') { gmailSub = `${esc(gmail.address)}. Google needs you to sign in again.`; gmailRight = `${chip('warn', 'Needs reconnecting')}<a class="btn primary" href="/oauth/google/start?label=${encodeURIComponent(gmail.label)}">Reconnect</a>`; }
+  else { gmailSub = esc(gmail.address); gmailRight = `${chip('ok', 'Connected')}<button class="btn" type="button" data-disconnect="${esc(gmail.id)}">Disconnect</button>`; }
+
+  const setupBox = s.google.configured ? '' : `
+    <div class="setup-box">
+      <p>Google asks every app that reads Gmail to be registered once, even a personal one. It takes about 10 minutes and you only do it once.</p>
+      <ol class="steps">
+        <li><a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Create a Google Cloud project</a> called ${appName}.</li>
+        <li><a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener">Turn on the Gmail API</a> for that project.</li>
+        <li><a href="https://console.cloud.google.com/auth/overview" target="_blank" rel="noopener">Set up the sign-in screen</a>: app name ${appName}, your email, audience External. Then publish it, so Google doesn't log you out every 7 days.</li>
+        <li><a href="https://console.cloud.google.com/auth/clients/create" target="_blank" rel="noopener">Create a client</a> of type <b>Desktop app</b>, then paste its Client ID and Client secret here.</li>
+      </ol>
+      <form class="form" id="g-form" autocomplete="off">
+        <div class="field"><label for="g-id">Client ID</label><input id="g-id" required placeholder="123…apps.googleusercontent.com" spellcheck="false"></div>
+        <div class="field"><label for="g-secret">Client secret</label><input id="g-secret" type="password" required spellcheck="false"></div>
+        <div class="actions"><button class="btn primary" type="submit">Save</button><span class="err" id="g-err" role="alert"></span></div>
+      </form>
+    </div>`;
+
+  $('#conn-rows').innerHTML = row('G', 'g', 'Gmail (own Google app)', gmailSub, gmailRight) + setupBox;
+  if (gmail) $('#own-gmail').open = true;
+  renderClaudeConnectors(s);
+  $('#conn-other').innerHTML =
+    row('W', 'm', 'Work email', 'Microsoft 365 or Google Workspace', chip('off', 'Coming next')) +
+    row('H', 'o', 'Hotmail', 'Outlook.com', chip('off', 'Coming next'));
+
+  const form = $('#g-form');
+  if (form) form.addEventListener('submit', async e => {
+    e.preventDefault();
+    $('#g-err').textContent = '';
+    const r = await fetch('/api/setup/google-client', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientId: $('#g-id').value, clientSecret: $('#g-secret').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { $('#g-err').textContent = d.error || 'Could not save that.'; return; }
+    refresh();
+  });
+  document.querySelectorAll('[data-disconnect]').forEach(b => b.addEventListener('click', async () => {
+    b.disabled = true;
+    await fetch('/api/setup/disconnect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.dataset.disconnect }) });
+    refresh();
+  }));
+}
+
+/* Connectors from the user's Claude account, each with its own Read / Write permission. */
+const CONNECTOR_ICONS = { 'Gmail': ['G', 'g'], 'Google Calendar': ['C', 'c'], 'Google Drive': ['D', 'd'] };
+function renderClaudeConnectors(s) {
+  const c = s.claude || { connectors: [], connectUrl: 'https://claude.ai/settings/connectors' };
+  const connect = `<a class="btn primary" href="${esc(c.connectUrl)}" target="_blank" rel="noopener">Connect</a>`;
+  const rows = c.connectors.map(x => {
+    const [ic, cls] = CONNECTOR_ICONS[x.label] || [x.label[0].toUpperCase(), ''];
+    const p = x.permission || { read: false, write: false };
+    const allowed = !p.read ? 'Off.' : p.write ? 'Read and write. Every change waits for your tap.' : 'Read only.';
+    const sw = (kind, on, label) => `<label class="sw"><input type="checkbox" data-server="${esc(x.server)}" data-perm="${kind}" ${on ? 'checked' : ''} aria-label="${esc(x.label)} ${label}">${label}</label>`;
+    let state = '';
+    if (x.status === 'connected') state = chip('ok', 'Connected');
+    else if (x.status === 'needs-auth') state = connect;
+    else if (x.status === 'failed') state = chip('warn', 'Error') + connect;
+    else if (x.status === 'unknown') state = chip('off', 'Checking…');
+    const sub = `${esc(x.what)}. ${allowed}${x.status === 'failed' && x.error ? ` Couldn't reach it: ${esc(x.error)}` : ''}${x.status === 'needs-auth' ? ' Not connected yet.' : ''}`;
+    const right = `<div class="perm">${sw('read', p.read, 'Read')}${sw('write', p.write, 'Write')}</div>${state}`;
+    return `<div>${row(ic, cls, x.label, sub, right)}${canDo(x)}</div>`;
+  }).join('');
+  const when = c.checkedAt ? `Last checked ${new Date(c.checkedAt).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })}.` : 'Not checked yet.';
+  $('#claude-rows').innerHTML = rows + plainRow('Connected one on claude.ai?', when, `<button class="btn" type="button" id="conn-check">Check again</button>`);
+  $('#conn-check').addEventListener('click', async e => {
+    const b = e.currentTarget;
+    b.disabled = true; b.textContent = 'Checking…';
+    const r = await fetch('/api/setup/connectors/check', { method: 'POST' }).catch(() => null);
+    if (r && r.ok && status) { status.claude = await r.json(); renderClaudeConnectors(status); }
+    else { b.disabled = false; b.textContent = 'Check again'; }
+  });
+  document.querySelectorAll('#claude-rows input[data-perm]').forEach(inp => inp.addEventListener('change', async () => {
+    const x = c.connectors.find(k => k.server === inp.dataset.server);
+    const p = { ...(x.permission || { read: false, write: false }) };
+    p[inp.dataset.perm] = inp.checked;
+    if (inp.dataset.perm === 'write' && inp.checked) p.read = true;   // writing needs to look too
+    if (inp.dataset.perm === 'read' && !inp.checked) p.write = false;
+    document.querySelectorAll('#claude-rows input[data-perm]').forEach(i => i.disabled = true);
+    const r = await fetch('/api/setup/connectors/permission', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ server: x.server, ...p }) }).catch(() => null);
+    if (r && r.ok && status) status.claude = await r.json();
+    renderClaudeConnectors(status);
+  }));
+}
+/* Websites the browser may use with the user's own logins. */
+async function loadWebsites() {
+  const d = await (await fetch('/api/setup/browser')).json();
+  const rows = d.sites.map(s => row(s.label[0].toUpperCase(), '', s.label,
+    `${esc(s.origin)}. ${s.logged_in_at ? `Logged in ${esc(when(s.logged_in_at))}${s.last_used_at ? `, last used ${esc(when(s.last_used_at))}` : ''}. Logs out after 30 days unused.` : 'Not logged in yet.'}`,
+    `<button class="btn" type="button" data-weblogin="${esc(s.origin)}" ${d.busy ? 'disabled' : ''}>Log in</button><button class="btn" type="button" data-webremove="${esc(s.origin)}" ${d.busy ? 'disabled' : ''}>Remove and log out</button>`)).join('');
+  const status = d.busy ? `Busy: ${esc(d.busy)}.` : d.jobs.running ? `Working on: ${esc(d.jobs.running)}${d.jobs.waiting.length ? `, then ${d.jobs.waiting.length} more` : ''}.` : 'Idle.';
+  $('#web-rows').innerHTML = (rows || '<div class="empty">No sites yet. Add the ones you want it to use with your account, like woolworths.com.au.</div>') +
+    `<div class="setup-box"><form class="form" id="web-form" autocomplete="off">
+      <div class="field"><label for="web-site">Add a site</label><input id="web-site" placeholder="e.g. woolworths.com.au" spellcheck="false" required></div>
+      <div class="actions"><button class="btn primary" type="submit">Add</button>${d.sites.length ? `<button class="btn" type="button" id="web-forget" ${d.busy ? 'disabled' : ''}>Forget all logins</button>` : ''}<span class="err" id="web-msg" role="status"></span><span class="count">${status}</span></div>
+    </form></div>`;
+  $('#web-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const r = await post('/api/setup/browser/add', { site: $('#web-site').value });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { $('#web-msg').style.color = 'var(--bad)'; $('#web-msg').textContent = j.error || 'Could not add that'; return; }
+    loadWebsites();
+  });
+  $('#web-forget')?.addEventListener('click', async e => { e.currentTarget.disabled = true; const r = await post('/api/setup/browser/forget-all', {}); const j = await r.json().catch(() => ({})); if (!r.ok) alertRow(j.error); loadWebsites(); });
+  document.querySelectorAll('[data-webremove]').forEach(b => b.onclick = async () => { b.disabled = true; await post('/api/setup/browser/remove', { origin: b.dataset.webremove }); loadWebsites(); });
+  document.querySelectorAll('[data-weblogin]').forEach(b => b.onclick = async () => {
+    b.disabled = true; b.textContent = 'Opening…';
+    const r = await post('/api/setup/browser/login', { origin: b.dataset.weblogin });
+    const j = await r.json().catch(() => ({}));
+    b.textContent = r.ok ? 'Window open' : 'Log in';
+    if (!r.ok) { b.disabled = false; alertRow(j.error); }
+  });
+}
+function alertRow(msg) { const m = $('#web-msg'); if (m) { m.style.color = 'var(--bad)'; m.textContent = msg || 'Could not open the browser'; } }
+
+/** Exactly what a connected connector can do, grouped the way permissions work. */
+function canDo(x) {
+  if (x.status !== 'connected' || !x.tools.length) return '';
+  const group = kind => x.tools.filter(t => t.kind === kind).map(t => `<li>${esc(shortTool(t.name))}</li>`).join('');
+  const reads = group('read'), drafts = group('draft'), writes = group('write');
+  return `<details class="can"><summary>What it can do (${x.tools.length})</summary>
+    ${reads ? `<b>Looks things up (needs Read)</b><ul>${reads}</ul>` : ''}
+    ${drafts ? `<b>Saves drafts (needs Write, no tap)</b><ul>${drafts}</ul>` : ''}
+    ${writes ? `<b>Makes changes (needs Write, and your tap every time)</b><ul>${writes}</ul>` : ''}</details>`;
+}
+
+function renderVoice(s) {
+  $('#vb-rows').innerHTML = [
+    plainRow('Voice model', 'OpenAI gpt-live-1. Talks and listens, and hands every real question to the brain.', chip(s.voice.ready ? 'ok' : 'bad', s.voice.ready ? 'Ready' : 'No key')),
+    plainRow('Voice', `"${esc(s.voice.name)}". Set LIVE_VOICE in .env to change it.`, ''),
+    plainRow('Brain', `Claude ${esc(prettyModel(s.brain.model))}. Set BRAIN_MODEL in .env to change it.`, chip(s.brain.subscription ? 'ok' : 'warn', s.brain.subscription ? 'Your subscription' : s.brain.apiKeySource)),
+    plainRow('Cost', 'The voice is about 5c a minute while a call is open. It hangs up after 2 minutes of quiet.', ''),
+  ].join('');
+}
+
+const prettyModel = m => ({ 'claude-haiku-5-5': 'Haiku 5.5', 'claude-sonnet-5-5': 'Sonnet 5.5', 'claude-opus-5-5': 'Opus 5.5' }[m] || m);
+
+/* ---------- activity log ---------- */
+const connName = t => { const m = /^mcp__claude_ai_(.+?)__/.exec(t || ''); return m ? m[1].replace(/_/g, ' ') : 'a connector'; };
+const shortTool = t => String(t || '').replace(/^mcp__\w+?__/, '').replace(/_/g, ' ');
+function describe(e) {
+  let d = {};
+  try { d = e.detail ? JSON.parse(e.detail) : {}; } catch {}
+  const to = d.to ? d.to.join(', ') : '';
+  switch (e.event) {
+    case 'boot': return [`${appName} started`, d.unknown_actions ? `${d.unknown_actions} send(s) left unconfirmed by a restart` : ''];
+    case 'delegation': return ['You asked', d.utterance ? `“${d.utterance}”` : ''];
+    case 'answered': return ['Answered', d.ms ? `in ${(d.ms / 1000).toFixed(1)} s` : ''];
+    case 'failed': return ['Couldn’t finish a request', d.message || ''];
+    case 'draft.saved': return [`Drafted an email from ${d.account}`, `To ${to}: ${d.subject || ''}`];
+    case 'approval.requested': return d.operation === 'connector.call' ? ['Asked for your OK', d.summary || ''] : ['Asked for your OK to send', `To ${to} from ${d.account}`];
+    case 'approval.approved': return ['You approved it', ''];
+    case 'connector.read': return [`Looked in ${connName(d.tool)}`, shortTool(d.tool)];
+    case 'connector.draft': return [`Saved a draft in ${connName(d.tool)}`, ''];
+    case 'connector.write_held': return [`Held a change to ${connName(d.tool)} for your OK`, shortTool(d.tool)];
+    case 'connector.denied': return [`Stopped: no permission for ${connName(d.tool)}`, shortTool(d.tool)];
+    case 'relationship.asked': return ['Asked about you', d.question || ''];
+    case 'profile.changed': return d.op === 'name' ? [`You named it “${d.new}”`, d.old && d.old !== '(no name)' ? `Was “${d.old}”` : ''] : [`${d.target === 'SOUL.md' ? 'Personality' : d.target === 'USER.md' ? 'About you' : 'Memory'} updated`, d.op === 'replace' ? d.source : `“${d.new || d.old || ''}”`];
+    case 'profile.held': return ['Waiting for your OK before remembering', `${d.new || d.old || ''} (${d.source})`];
+    case 'profile.confirmed': return ['You said yes', d.what || ''];
+    case 'profile.rejected': return ['You said no', d.what || ''];
+    case 'connector.permission': return [`You set ${d.connector} to ${!d.read ? 'off' : d.write ? 'read and write' : 'read only'}`, ''];
+    case 'connectors.status': return ['Claude connectors checked', (d.connectors || []).map(c => `${c.name}: ${c.status === 'connected' ? 'connected' : 'not connected'}`).join(', ')];
+    case 'approval.rejected': return ['You said not now', ''];
+    case 'approval.refused': return ['Refused an approval', d.reason || ''];
+    case 'approval.expired': return ['An approval expired', ''];
+    case 'action.executing': return d.tool ? ['Doing it…', shortTool(d.tool)] : ['Sending…', ''];
+    case 'action.accepted': return d.tool ? ['Done', shortTool(d.tool)] : ['Handed to the mail server', ''];
+    case 'action.verified': return ['Sent and confirmed', ''];
+    case 'action.failed': return [d.tool ? 'Didn’t go through' : 'Didn’t send', d.error || ''];
+    case 'action.unknown': return [d.tool ? 'Not sure it went through, so it won’t retry' : 'Not sure it sent, so it won’t resend', d.reason || d.error || ''];
+    case 'account.connected': return [`Connected ${d.label}`, d.address || ''];
+    case 'account.disconnected': return ['Disconnected an account', ''];
+    case 'account.needs_reconnect': return ['An account needs reconnecting', ''];
+    case 'google.client.saved': return ['Saved the Google app details', ''];
+    case 'job.interrupted': return ['A request was interrupted by a restart', ''];
+    case 'routine.created': return [`New routine: ${d.title}`, d.schedule || ''];
+    case 'routine.run': return [`Ran routine: ${d.title}`, ''];
+    case 'routine.done': return [`Finished: ${d.title}`, d.notified ? 'Told you about it' : 'Nothing worth telling you'];
+    case 'routine.failed': return [`Routine failed: ${d.title}`, d.paused ? 'Paused after three failures' : (d.error || '')];
+    case 'routine.paused': return [`Paused routine: ${d.title}`, ''];
+    case 'routine.active': return [`Resumed routine: ${d.title}`, ''];
+    case 'routine.deleted': return [`Deleted routine: ${d.title}`, ''];
+    case 'routine.updated': return [`Changed routine: ${d.title}`, d.schedule || ''];
+    case 'commitment.added': return [`Tracking: ${d.title}`, d.due_at ? `Due ${new Date(d.due_at).toLocaleString()}` : ''];
+    case 'commitment.done': return ['Follow-up done', d.note || ''];
+    case 'commitment.dropped': return ['Follow-up dropped', d.note || ''];
+    case 'browser.queued': return [`Web job queued: ${d.summary}`, ''];
+    case 'browser.started': return [`Working on the web: ${d.summary}`, d.mode === 'logins' ? 'Using your saved logins' : 'Fresh browser, no logins'];
+    case 'browser.finished': return [`Web job ${({ done: 'done', needs_user: 'needs you', declined: 'stopped (you said no)', failed: 'failed' })[d.status] || d.status}: ${d.summary}`, d.secs ? `${d.secs} s` : ''];
+    case 'browser.failed': return ['Web job failed', d.error || ''];
+    case 'browser.held': return [`Waited for your go-ahead before pressing "${d.button}"`, d.url || ''];
+    case 'browser.committed': return [`Pressed "${d.button}" after your go-ahead`, d.url || ''];
+    case 'browser.blocked': return ['Stopped the browser going somewhere it shouldn’t', `${d.url || ''} ${d.why || ''}`];
+    case 'browser.site_added': return [`Added a website: ${d.origin}`, ''];
+    case 'browser.site_removed': return [`Removed a website: ${d.origin}`, ''];
+    case 'browser.login_opened': return [`Opened the browser for you to log in: ${d.origin}`, ''];
+    case 'browser.login_forgotten': return [`Logged its browser out of ${d.origin}`, ''];
+    case 'browser.logins_cleared': return ['Forgot every website login', ''];
+    case 'browser.login_closed': return [`Login window closed: ${d.origin}`, ''];
+    case 'browser.gateway_refused': return ['Refused a request from its own browser', d.path || ''];
+    case 'keeper.ran': return ['Went over the conversation', [d.saved && `${d.saved} saved`, d.held && `${d.held} waiting for your yes`, d.offers && `${d.offers} to offer`, d.settled && `${d.settled} closed`].filter(Boolean).join(', ') || 'Nothing new to keep'];
+    case 'keeper.failed': return ['Couldn’t go over the conversation (will retry)', d.error || ''];
+    case 'offer.accepted': return ['You said yes to tracking something it noticed', ''];
+    case 'offer.declined': return ['You said no to tracking something it noticed', ''];
+    case 'brain.fresh_start': return ['Started a fresh day', 'Yesterday is saved in brief'];
+    case 'followup.asked': return [`Asked you: ${d.line || d.title}`, d.critical ? 'Straight away (due soon)' : 'At the next window'];
+    case 'followup.answered': return [`You answered: ${({ not_yet: 'not yet', later: 'later', stop_asking: 'stop asking', blocked: 'blocked', already_done: 'already done', done: 'done' })[d.answer] || d.answer}`, d.title || ''];
+    case 'followups.controls': return ['Follow-up settings changed', d.now || ''];
+    case 'commitment.reminded': return [`Reminded you: ${d.title}`, ''];
+    case 'commitment.check': return [`Checked on: ${d.title}`, ''];
+    case 'memory.saved': return [`Remembered: ${d.subject}`, d.fact || ''];
+    case 'memory.forgotten': return ['Forgot a saved fact', ''];
+    case 'notification.pushed': return [`Notified you: ${d.title}`, ''];
+    case 'notification.delivered_quietly': return [`Saved for later (no buzz): ${d.title}`, ''];
+    case 'notification.queued': return null;
+    case 'push.subscribed': return ['Phone alerts switched on', ''];
+    case 'web.search': return ['Searched the web', d.query ? `“${d.query}”` : ''];
+    case 'web.fetch': return ['Opened a web page', d.url || ''];
+    case 'web.fetch_blocked': return ['Blocked a web page', `${d.url || ''}. ${d.reason || ''}`];
+    case 'setting.changed': return [`Changed a setting: ${e.ref}`, d.value === '' ? 'Off' : (d.value || '')];
+    default: return [e.event, ''];
+  }
+}
+async function loadActivity() {
+  const r = await fetch('/api/setup/activity');
+  const { events } = await r.json();
+  const shown = events.filter(e => describe(e) !== null);
+  $('#log').innerHTML = shown.length ? shown.map(e => {
+    const [title, sub] = describe(e);
+    const t = new Date(e.ts);
+    return `<li><time>${t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time><div>${esc(title)}${sub ? `<small>${esc(sub)}</small>` : ''}</div></li>`;
+  }).join('') : '<li class="empty">Nothing yet.</li>';
+}
+
+/* ---------- data ---------- */
+async function refresh() {
+  try {
+    const r = await fetch('/api/setup/status');
+    status = await r.json();
+    renderOverview(status); renderVoice(status);
+    const typing = $('#g-id')?.value || $('#g-secret')?.value; // don't wipe half-filled credentials
+    if (!typing) renderConnections(status);
+    const since = new Date(status.startedAt);
+    $('#sf-state').textContent = status.voice.live ? 'Running, in a call' : 'Running';
+    $('#sf-since').textContent = `Since ${since.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+  } catch {
+    $('#sf-state').textContent = 'Not responding';
+  }
+}
+$('#copy-url').addEventListener('click', async () => {
+  const text = $('#phone-url').textContent;
+  try { await navigator.clipboard.writeText(text); $('#copy-url').textContent = 'Copied'; setTimeout(() => $('#copy-url').textContent = 'Copy', 1500); } catch {}
+});
+show();
+refresh();
+setInterval(() => { refresh(); if (currentPage() === 'proactive') loadProactive(false); if (currentPage() === 'drawings') loadDrawings(); if (currentPage() === 'personality') loadPersonality(false); if (currentPage() === 'connections' && !$('#web-site')?.value) loadWebsites(); }, 8000);
+</script>
+</body>
+</html>
