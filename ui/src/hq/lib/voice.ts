@@ -1,5 +1,5 @@
 // The existing voice call, with the chosen bot included when it starts.
-
+
 
 export type VoiceState = "off" | "connecting" | "listening" | "muted" | "thinking" | "speaking";
 type Handlers = {
@@ -81,17 +81,55 @@ export function createVoice(clientId: string, h: Handlers, bot: string) {
     if (dc?.readyState === "open") dc.send(JSON.stringify({ event_id: `c_${Date.now().toString(36)}`, ...evt }));
   }
 
+  /** The call can hear once its link is really up. The answer from the server comes a second or two before that, and
+   * words said in between were lost while the screen already showed it listening. Waits only while the link says it
+   * is still connecting, and never more than four seconds. */
+  function linkUp(conn: RTCPeerConnection, channel: RTCDataChannel) {
+    if (channel.readyState !== "connecting") return Promise.resolve();
+    return new Promise<void>((res) => {
+      const t = setTimeout(res, 4000);
+      const done = () => {
+        clearTimeout(t);
+        res();
+      };
+      channel.addEventListener("open", done);
+      conn.addEventListener("connectionstatechange", () => {
+        if (["failed", "closed"].includes(conn.connectionState)) done();
+      });
+    });
+  }
+  /** Two soft rising notes: the call is up and listening, so there is no need to say "hello" to find out. */
+  function readyTone() {
+    if (!soundOn || !audioCtx) return;
+    try {
+      const t = audioCtx.currentTime,
+        osc = audioCtx.createOscillator(),
+        gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(660, t);
+      osc.frequency.setValueAtTime(880, t + 0.09);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.06, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.22);
+    } catch {}
+  }
+
   async function start() {
     if (live !== "off") return;
     live = "connecting";
     set("connecting");
-    try {
+    try {
+      const began = performance.now();
       const micRequest = navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
       audioCtx = audioCtx || new AudioContext();
       audioCtx.resume().catch(() => {});
       const stream = await micRequest;
       if (live !== "connecting") { stream.getTracks().forEach(track => track.stop()); return; }
       mic = stream;
+      const micMs = Math.round(performance.now() - began);
       pc = new RTCPeerConnection();
       pc.addEventListener("track", (e) => {
         const stream = e.streams[0] || new MediaStream([e.track]);
@@ -114,15 +152,19 @@ export function createVoice(clientId: string, h: Handlers, bot: string) {
       await pc.setLocalDescription(offer);
       await waitIce(pc);
       if (live !== "connecting" || !pc) return;
-      const r = await fetch("/api/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sdp: pc.localDescription!.sdp, client_id: clientId, bot }) });
+      const iceMs = Math.round(performance.now() - began) - micMs;
+      const r = await fetch("/api/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sdp: pc.localDescription!.sdp, client_id: clientId, bot, mic_ms: micMs, ice_ms: iceMs }) });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.error || `Voice session failed (${r.status})`);
       if (live !== "connecting" || !pc) return;
       await pc.setRemoteDescription({ type: "answer", sdp: data.transport.sdp });
+      await linkUp(pc, dc);
+      if (live !== "connecting" || !pc) return; // hung up while it was connecting
       live = "on";
       muted = false;
       lastActivity = now();
       set("listening");
+      readyTone();
       try {
         wake = await (navigator as Navigator & { wakeLock?: { request(t: "screen"): Promise<{ release: () => Promise<void> }> } }).wakeLock?.request("screen") ?? null;
       } catch {}
@@ -184,7 +226,7 @@ export function createVoice(clientId: string, h: Handlers, bot: string) {
     } else if (e.type === "error") {
       console.warn("live error", e);
     }
-  }
+  }
   const levelTimer = setInterval(() => {
     if (live !== "on") return;
     const lvl = voiceOff ? 0 : readLevel();
@@ -198,7 +240,7 @@ export function createVoice(clientId: string, h: Handlers, bot: string) {
       set(brainBusy ? "thinking" : muted ? "muted" : "listening");
     }
     if (!brainBusy && t - lastActivity > IDLE_HANGUP_S) hangUp("Hung up to save credit. Tap me to start again.");
-  }, 80);
+  }, 80);
   const visibleAgain = async () => {
     if (!document.hidden && live === "on" && !wake) {
       try {

@@ -28,6 +28,7 @@ import { DATA_DIR, db, nowIso } from "../store/db.js";
 import { DEV, devAllows } from "../dev.js";
 import { DIST, appFile, serveApp, pageHeaders, entryPage } from "./static.js";
 import { tryFastPath } from "./fastpath.js";
+import { bareGreeting } from "./greeting.js";
 import { getDoc, startFileWatcher } from "../files/library.js";
 import { startReferenceShelf } from "../reference/library.js";
 import { bookPage, refInfo, refPageImage, refTile, warmRef } from "../reference/pages.js";
@@ -509,6 +510,17 @@ async function answerHandOver({ delegationId, utterance, jobId, corrects, speak,
     audit("voice", "fast_path", delegationId, { utterance, did: fast.did });
     return { spoken: fast.spoken, fast: true };
   }
+  // A bare hello on a team call is answered at once (greeting.ts): the voice hands every line over, and a whole bot's
+  // turn for "hello" kept the owner waiting about ten seconds at the start of a call.
+  const hello = process.env.LH_V3 === "1" && !by && !corrects && !table.on ? bareGreeting(utterance, hq?.members().find((b) => b.id === callBot)?.name) : null;
+  if (hello) {
+    toAll({ type: "heard", text: utterance, job_id: null }, { type: "heard", text: utterance });
+    toAll({ type: "brain", phase: "done", spoken: hello, source: "voice", job_id: null, origin: owner, fast: true }, null);
+    logConversation("assistant", "voice", hello);
+    finishJob(jobId, { spoken: hello });
+    audit("voice", "fast_path", delegationId, { utterance, did: "greeting" });
+    return { spoken: hello, fast: true };
+  }
   // The round table (Stage 17): on, or these words bring the guest in. It says its own lines; the voice is closed quietly.
   if (utterance && table.wants(utterance)) return table.handOver(utterance, { origin: owner, clientId: ownerId, jobId, heard });
   const request = [
@@ -980,20 +992,26 @@ const server = createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/api/session") {
       if (!sameOrigin(req)) return send(res, 403, { error: "origin not allowed" });
       if (!openaiKey()) return send(res, 503, { error: "No OpenAI key yet. Add OPENAI_API_KEY to .env and restart." });
-      const { sdp, client_id, bot } = JSON.parse(await readBody(req));
+      const { sdp, client_id, bot, mic_ms, ice_ms } = JSON.parse(await readBody(req));
       if (typeof sdp !== "string" || !sdp.startsWith("v=")) return send(res, 400, { error: "missing SDP offer" });
       voiceOwner = typeof client_id === "string" && /^[\w-]{1,64}$/.test(client_id) ? client_id : null;
       callBot = hq?.pick("", typeof bot === "string" ? bot : undefined).bot.id;
       endLive();
       callVoiceBot = callBot;
+      const asked = Date.now();
       const session = await createLiveSession(openaiKey(), sdp, hq?.pick("", callBot).bot.voice ?? VOICE);
       console.log(`[live] session ${session.id} created`);
+      // How long the call took to set up, for when a start feels slow: the microphone and the device's own network
+      // check (timed on the device), then the voice service making the session.
+      const took = (v: unknown) => (typeof v === "number" && v >= 0 && v < 120_000 ? Math.round(v) : null);
+      const setup = { mic_ms: took(mic_ms), ice_ms: took(ice_ms), session_ms: Date.now() - asked };
       const sb = new Sideband(openaiKey(), session.id, onLiveEvent, (why) => {
         console.warn(`[live] ${why}`);
         if (live.sideband === sb) toAll({ type: "live", state: "degraded", message: "Lost the link to the voice service." });
       });
       live.sideband = sb;
       call.attach(sb, session.id);
+      audit("voice", "call.setup", session.id, setup);
       if (callBot) hq?.callChanged(callBot);
       if (table.on) muteCallVoice(true); // a round table already on: the call's voice is muted from the start (18.1)
       sb.attach().then(

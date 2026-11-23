@@ -2,6 +2,11 @@
 
 These dates describe capabilities in the source. They are not a claim that every feature has been tried on every PC or phone. Installation and release review still matter.
 
+## 24 November 2026
+
+- A call starts cleanly. The screen shows it listening, and two soft notes play, only once the call's link is really up; before, words said in the first second or two could be lost. A bare hello ("hello", "can you hear me?") is answered at once without a bot's turn, in about two seconds where it took about ten.
+- How long each call took to set up (microphone, the device's network check, the voice service) is kept in the record, for when a start feels slow.
+
 ## 21 November 2026
 
 - Tavi has its own look: a family of soft, rounded bots as the mark and the icon, its own lettering, and orange with green and blue on charcoal or stone. Every icon and picture is made from the drawings by one script. Your own messages keep the colour of the bot you are talking to.
