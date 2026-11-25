@@ -99,7 +99,7 @@ async function handle(req: IncomingMessage, res: ServerResponse, o: ToolboxOptio
   const target = o.resolveAddress ? o.resolveAddress(botId) : { bot: botId, lane: "chat" as const };
   if (!target) return send(res, 404);
   const servers = o.serversFor?.(botId) ?? "all";
-  if (!ALL_SERVERS.includes(server) || (servers !== "all" && !servers.includes(server))) return send(res, 404);
+  if (!ALL_SERVERS.includes(server) || (server !== "team" && servers !== "all" && !servers.includes(server))) return send(res, 404);
   const body = await readBody(req, res);
   if (body === null) return;
   let value: unknown;

@@ -1,0 +1,272 @@
+{
+  "label": "Recipe",
+  "title": "Slow-cooked tomato beef stew",
+  "summary": "Tender beef, a rich tomato sauce and a little warmth. A slow afternoon, a very good supper.",
+  "source": "The bot's own recipe",
+  "facts": [
+    {
+      "label": "Serves",
+      "value": "6"
+    },
+    {
+      "label": "Active time",
+      "value": "30 minutes"
+    },
+    {
+      "label": "Oven time",
+      "value": "2.5 to 3 hours"
+    },
+    {
+      "label": "Difficulty",
+      "value": "Easy"
+    }
+  ],
+  "picture_style": "Natural side light, warm stone and dark cookware, close view, honest food colours, no lettering.",
+  "cover": {
+    "type": "made",
+    "prompt": "A finished rich tomato beef stew in a dark pot, tender beef chunks, carrots, a swirl of cream and chopped parsley, with bread beside it.",
+    "alt": "Rich tomato beef stew, ready to serve"
+  },
+  "blocks": [
+    {
+      "type": "list",
+      "title": "What you need",
+      "style": "tick",
+      "groups": [
+        {
+          "title": "The beef",
+          "items": [
+            {
+              "amount": "1.2 kg",
+              "text": "Beef chuck",
+              "note": "Cut into 4 cm chunks"
+            },
+            {
+              "amount": "2 tbsp",
+              "text": "Plain flour"
+            },
+            {
+              "amount": "3 tbsp",
+              "text": "Olive oil"
+            },
+            {
+              "text": "Salt and pepper",
+              "note": "To season"
+            }
+          ]
+        },
+        {
+          "title": "The base",
+          "items": [
+            {
+              "amount": "2",
+              "text": "Brown onions",
+              "note": "Sliced"
+            },
+            {
+              "amount": "2",
+              "text": "Carrots",
+              "note": "Cut into chunky pieces"
+            },
+            {
+              "amount": "2 sticks",
+              "text": "Celery",
+              "note": "Sliced"
+            },
+            {
+              "amount": "1",
+              "text": "Red capsicum",
+              "note": "Sliced"
+            },
+            {
+              "amount": "4 cloves",
+              "text": "Garlic",
+              "note": "Crushed"
+            },
+            {
+              "amount": "2 tbsp",
+              "text": "Tomato paste"
+            }
+          ]
+        },
+        {
+          "title": "The spice",
+          "items": [
+            {
+              "amount": "2 tsp",
+              "text": "Smoked paprika"
+            },
+            {
+              "amount": "1 tsp",
+              "text": "Ground cumin"
+            },
+            {
+              "amount": "1 to 2 tsp",
+              "text": "Chilli flakes",
+              "note": "Use 1 tsp for gentle heat"
+            },
+            {
+              "amount": "1 tsp",
+              "text": "Dried oregano or thyme"
+            },
+            {
+              "amount": "2",
+              "text": "Bay leaves"
+            }
+          ]
+        },
+        {
+          "title": "The sauce",
+          "items": [
+            {
+              "amount": "2 x 400 g",
+              "text": "Crushed tomatoes"
+            },
+            {
+              "amount": "250 ml",
+              "text": "Beef stock"
+            },
+            {
+              "amount": "125 ml",
+              "text": "Red wine",
+              "note": "Or use more stock"
+            },
+            {
+              "amount": "1 tbsp",
+              "text": "Savoury sauce"
+            },
+            {
+              "amount": "1 tsp",
+              "text": "Brown sugar"
+            }
+          ]
+        },
+        {
+          "title": "To finish",
+          "items": [
+            {
+              "amount": "100 ml",
+              "text": "Thickened cream",
+              "note": "Or sour cream"
+            },
+            {
+              "amount": "A handful",
+              "text": "Parsley",
+              "note": "Chopped"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "title": "Make it slowly",
+      "steps": [
+        {
+          "title": "Coat the beef",
+          "text": "Toss the 1.2 kg beef with 2 tbsp flour and a good pinch of salt and pepper. Turn the pieces until lightly coated."
+        },
+        {
+          "title": "Brown in batches",
+          "text": "Heat 3 tbsp oil in a heavy pot. Brown the beef in small batches until a deep brown crust forms, then set it aside.",
+          "facts": [
+            {
+              "label": "Heat",
+              "value": "High"
+            },
+            {
+              "label": "Time",
+              "value": "3 to 4 min per batch"
+            }
+          ],
+          "note": {
+            "tone": "warning",
+            "text": "Keep space between the pieces. A crowded pot steams the beef instead of browning it."
+          },
+          "picture": {
+            "type": "made",
+            "prompt": "Beef chunks with a deep golden brown crust in a dark heavy pot, space between each piece, close enough to judge the browned surface.",
+            "alt": "The deep brown crust to aim for"
+          }
+        },
+        {
+          "title": "Soften the vegetables",
+          "text": "Turn the heat down. Cook the 2 onions, 2 carrots, 2 celery sticks and 1 capsicum until soft. Stir in the 4 garlic cloves, 2 tbsp tomato paste, paprika, cumin, chilli and oregano for another minute.",
+          "facts": [
+            {
+              "label": "Heat",
+              "value": "Medium"
+            },
+            {
+              "label": "Time",
+              "value": "8 to 10 min"
+            }
+          ]
+        },
+        {
+          "title": "Build the sauce",
+          "text": "Pour in 125 ml wine and scrape up the brown bits. Add the tomatoes, 250 ml stock, 1 tbsp savoury sauce, 1 tsp sugar and 2 bay leaves. Return the beef and its juices."
+        },
+        {
+          "title": "Let the oven do the work",
+          "text": "Bring to a gentle simmer, cover, then cook until a fork slips into the beef easily and it starts to fall apart.",
+          "facts": [
+            {
+              "label": "Oven",
+              "value": "160 C"
+            },
+            {
+              "label": "Time",
+              "value": "2.5 to 3 hours"
+            }
+          ],
+          "note": {
+            "tone": "tip",
+            "text": "For a slow cooker, cook for 8 hours on low or 4 to 5 hours on high instead."
+          },
+          "picture": {
+            "type": "made",
+            "prompt": "A spoon lifting fork-tender beef from thick glossy tomato sauce in a dark pot, showing how the beef separates easily and the sauce clings.",
+            "alt": "Tender beef and sauce that clings to the spoon"
+          }
+        },
+        {
+          "title": "Thicken and taste",
+          "text": "If the sauce is thin, uncover for the last 20 to 30 minutes until it coats a spoon. Remove the 2 bay leaves and taste before adding salt or chilli.",
+          "facts": [
+            {
+              "label": "Time",
+              "value": "20 to 30 min if needed"
+            }
+          ]
+        },
+        {
+          "title": "Finish gently",
+          "text": "Take the pot off the heat. Stir through 100 ml cream and scatter the chopped parsley over the top.",
+          "note": {
+            "tone": "warning",
+            "text": "Let the bubbling settle before adding cream. Do not boil it afterwards, or it may split."
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "tone": "tip",
+      "title": "Make tomorrow easier",
+      "text": "The flavour deepens overnight. Freeze portions before adding the cream, then stir it in when you reheat the stew until piping hot."
+    },
+    {
+      "type": "paragraph",
+      "parts": [
+        {
+          "text": "Good alongside",
+          "bold": true
+        },
+        {
+          "text": "\nCreamy mash, crusty bread, rice or wide pasta. For a gentler stew, use just 1 tsp chilli flakes."
+        }
+      ]
+    }
+  ]
+}

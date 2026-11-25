@@ -204,12 +204,23 @@ export async function tryFastPath(text: string, clientId: string | null, origin:
     return { spoken: n === 1 ? "Unpinned it." : "All unpinned.", did: `clear pins: ${n}` };
   }
   if (NORMAL.has(t)) {
+    if (process.env.LH_V3 === "1") return null;
     const had = getSettings()["ui.colour_override"];
     updateSettings({ "ui.colour_override": null }, "brain");
     const { colour, day } = usualColour();
     return { spoken: had ? `Back to ${colour} for ${day}.` : `I'm already ${colour} for ${day}.`, did: "colour: normal" };
   }
   const go = /^(?:go|turn|be) (\w+)(?: for (?:today|the day))?$/.exec(t);
+  if (go && process.env.LH_V3 === "1") {
+    const { colourNamed } = await import("../hq/looks/choices.js");
+    const colour = colourNamed(go[1]);
+    if (!bot || !colour) return null;
+    try {
+      const { changeLook } = await import("../hq/toolbox/looks.js");
+      changeLook(bot, { colour });
+      return { spoken: `${cap(colour)} it is. I'll keep this look.`, did: `colour: ${colour}` };
+    } catch { return null; }
+  }
   if (go && (COLOURS as readonly string[]).includes(go[1])) {
     updateSettings({ "ui.colour_override": { colour: go[1] as Colour, until: nextLocalMidnight() } }, "brain");
     return { spoken: `${cap(go[1])} it is, until tomorrow.`, did: `colour: ${go[1]}` };

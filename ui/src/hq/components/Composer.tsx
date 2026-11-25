@@ -23,7 +23,7 @@ export function Composer({ bot, running }: { bot: TeamBot; running: boolean }) {
   const send = async () => {
     if (!text.trim() || sending) return;
     busy(true);
-    try { await request(`/bots/${encodeURIComponent(bot.id)}/messages`, "POST", { text: text.trim() }); edit(""); drafts.delete(bot.id); set({ setupBot: null }); }
+    try { await request(`/bots/${encodeURIComponent(bot.id)}/messages`, "POST", { text: text.trim(), client_id: socketId() }); edit(""); drafts.delete(bot.id); set({ setupBot: null }); }
     catch (error) { reportError(error); }
     finally { busy(false); input.current?.focus(); }
   };

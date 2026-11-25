@@ -17,6 +17,7 @@ import { newTurnCtx, type TurnCtx } from "../../brain/turn.js";
 import { teamTools } from "../team/index.js";
 import { webTools } from "./web.js";
 import { findsTools } from "../finds/tools.js";
+import { lookTools } from "./looks.js";
 
 const factories = {
   site: siteTools,
@@ -32,7 +33,7 @@ const factories = {
   shop: shopTools,
   computers: computerTools,
   brainlink: brainLinkTools,
-  team: (ctx: TurnCtx) => [...teamTools(ctx), ...findsTools(ctx)],
+  team: (ctx: TurnCtx) => [...teamTools(ctx), ...findsTools(ctx), ...lookTools(ctx)],
   web: webTools,
 };
 
@@ -57,7 +58,7 @@ listingCtx.turn.persist = false;
 export const listedTools = (server: string, bot?: string) => {
   if (server !== "team" || !bot) return toolsFor(listingCtx, server);
   const ctx = newTurnCtx(); ctx.bot = bot; ctx.test = true; ctx.turn.persist = false;
-  return [...teamTools(ctx), ...findsTools(ctx)];
+  return [...teamTools(ctx), ...findsTools(ctx), ...lookTools(ctx)];
 };
 export const toolNames = (server: string): string[] => listedTools(server).map((t) => t.name);
 

@@ -1,0 +1,38 @@
+{
+  "label": "Comparison",
+  "title": "Choose your slow-cooking pot",
+  "summary": "Three ways to get the same tender finish.",
+  "blocks": [
+    {
+      "type": "callout",
+      "tone": "pick",
+      "title": "Our pick: a heavy oven pot",
+      "text": "Choose the heavy oven pot for the richest sauce and the least moving between pans."
+    },
+    {
+      "type": "table",
+      "columns": [
+        "Option",
+        "Time",
+        "Best for"
+      ],
+      "rows": [
+        [
+          "Heavy oven pot",
+          "2.5 to 3 hours",
+          "A richer sauce"
+        ],
+        [
+          "Slow cooker",
+          "8 hours on low",
+          "An early start"
+        ],
+        [
+          "Stovetop pot",
+          "About 3 hours",
+          "Keeping an eye on it"
+        ]
+      ]
+    }
+  ]
+}

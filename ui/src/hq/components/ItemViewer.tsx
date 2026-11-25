@@ -1,4 +1,4 @@
-import { pageView } from "../../shared/items/page";
+import { pageView, updatePageView } from "../../shared/items/page";
 import { useEffect, useRef, useState } from "react";
 import type { Item, SheetPayload } from "../../../../src/shared/protocol";
 import { SheetViewer, type Zoomable } from "../../shared/sheet-viewer/viewer";
@@ -76,7 +76,8 @@ function SafeImage({ src, alt }: { src: string; alt: string }) {
 }
 function PageContent({ item }: { item: Extract<Item, { kind: "page" }> }) {
   const host = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (host.current) return pageView(host.current, item, id => { void oldRequest<{ item: Item }>(`/api/items/${encodeURIComponent(item.id)}/rows/${encodeURIComponent(id)}/open`, { method: "POST" }).then(result => set({ viewer: result.item })).catch(reportError); }); }, [item]);
+  useEffect(() => { if (host.current) return pageView(host.current, item, id => { void oldRequest<{ item: Item }>(`/api/items/${encodeURIComponent(item.id)}/rows/${encodeURIComponent(id)}/open`, { method: "POST" }).then(result => set({ viewer: result.item })).catch(reportError); }); }, [item.id]);
+  useEffect(() => { if (host.current) updatePageView(host.current, item); }, [item]);
   return <div ref={host} />;
 }
 function ItemContent({ item }: { item: Item }) {

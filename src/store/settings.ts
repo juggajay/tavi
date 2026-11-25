@@ -22,6 +22,9 @@ const validZone = (tz: string) => {
 
 /** Each setting: its schema, its default, and whether it's stored as a plain string or as JSON. */
 const DEFS = {
+  "pages.pictures": { schema: z.enum(["on", "off"]), def: "on", raw: true },
+  "pages.pictures_per_day": { schema: z.number().int().min(0).max(1000), def: 40, raw: false },
+  "pages.picture_model": { schema: z.string().regex(/^(?:[\w.-]{1,80})?$/, "Use a model name or leave it empty."), def: "gpt-6.1-terra", raw: true },
   "web.first": { schema: z.enum(["codex", "claude"]), def: "codex", raw: true },
   "finds.enabled": { schema: z.boolean(), def: true, raw: false },
   "finds.dev_schedule": { schema: z.boolean(), def: false, raw: false },

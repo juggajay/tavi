@@ -1,0 +1,139 @@
+{
+ "title": "Slow-cooked spicy tomato beef stew",
+ "summary": "A rich tomato beef stew with a gentle chilli kick and a splash of cream at the end. Serves 6. Takes about 30 minutes to prep, then 3 hours in the oven or 8 in a slow cooker.",
+ "source": "The bot's own recipe, not taken from a website",
+ "blocks": [
+  {
+   "type": "paragraph",
+   "parts": [
+    {
+     "text": "Serves 6. ",
+     "bold": true
+    },
+    {
+     "text": "Prep about 30 minutes. Cook 2.5 to 3 hours in the oven, or 8 hours on low in a slow cooker. It's even better the next day."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "Ingredients"
+  },
+  {
+   "type": "paragraph",
+   "parts": [
+    {
+     "text": "The beef\n",
+     "bold": true
+    },
+    {
+     "text": "1.2 kg beef chuck or gravy beef, cut into 4 cm chunks\n2 tbsp plain flour\nSalt and pepper\n3 tbsp olive oil\n\n"
+    },
+    {
+     "text": "The base\n",
+     "bold": true
+    },
+    {
+     "text": "2 brown onions, sliced\n2 carrots, cut chunky\n2 celery sticks, sliced\n1 red capsicum, sliced\n4 garlic cloves, crushed\n2 tbsp tomato paste\n\n"
+    },
+    {
+     "text": "The spice\n",
+     "bold": true
+    },
+    {
+     "text": "2 tsp smoked paprika\n1 tsp ground cumin\n1 to 2 tsp chilli flakes, or 1 fresh red chilli, chopped (1 tsp is mild, 2 is a decent kick)\n1 tsp dried oregano or thyme\n2 bay leaves\n\n"
+    },
+    {
+     "text": "The sauce\n",
+     "bold": true
+    },
+    {
+     "text": "2 tins (400 g each) crushed tomatoes\n250 ml beef stock\n125 ml red wine, or more stock\n1 tbsp Worcestershire sauce\n1 tsp brown sugar\n\n"
+    },
+    {
+     "text": "To finish\n",
+     "bold": true
+    },
+    {
+     "text": "100 ml thickened cream, or sour cream\nA handful of chopped parsley"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "Method"
+  },
+  {
+   "type": "paragraph",
+   "parts": [
+    {
+     "text": "1. Coat the beef. ",
+     "bold": true
+    },
+    {
+     "text": "Toss the beef with the flour and a good pinch of salt and pepper.\n\n"
+    },
+    {
+     "text": "2. Brown it. ",
+     "bold": true
+    },
+    {
+     "text": "Heat the oil in a heavy casserole pot over high heat. Brown the beef in batches, 3 to 4 minutes a batch, then set it aside. Don't crowd the pot, or the beef steams instead of browning.\n\n"
+    },
+    {
+     "text": "3. Soften the veg. ",
+     "bold": true
+    },
+    {
+     "text": "Turn the heat down to medium. Cook the onion, carrot, celery and capsicum for about 8 minutes, until soft. Add the garlic, tomato paste, paprika, cumin, chilli and herbs and stir for a minute or two.\n\n"
+    },
+    {
+     "text": "4. Build the sauce. ",
+     "bold": true
+    },
+    {
+     "text": "Pour in the wine and scrape the brown bits off the bottom. Add the tomatoes, stock, Worcestershire, sugar and bay leaves, then put the beef and its juices back in.\n\n"
+    },
+    {
+     "text": "5. Slow cook. ",
+     "bold": true
+    },
+    {
+     "text": "Bring it to a simmer, put the lid on and cook until the beef falls apart. That's 2.5 to 3 hours in a 160°C oven, or on the lowest flame on the stovetop with a stir now and then. In a slow cooker, it's 8 hours on low or 4 to 5 on high.\n\n"
+    },
+    {
+     "text": "6. Thicken and taste. ",
+     "bold": true
+    },
+    {
+     "text": "If it's too thin, take the lid off for the last 20 to 30 minutes. Fish out the bay leaves. Taste it and add more salt or chilli if you want.\n\n"
+    },
+    {
+     "text": "7. Add the cream. ",
+     "bold": true
+    },
+    {
+     "text": "Take it off the heat and stir the cream through. Don't let it boil after that, or the cream can split. Scatter the parsley on top."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "text": "Serve with"
+  },
+  {
+   "type": "paragraph",
+   "parts": [
+    {
+     "text": "Creamy mash, crusty bread, rice or wide pasta like pappardelle."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "tone": "question",
+   "title": "Tips",
+   "text": "For smokier heat, swap some of the chilli flakes for a chipotle in adobo. It freezes well: freeze it before the cream goes in, and add the cream when you reheat it."
+  }
+ ]
+}

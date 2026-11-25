@@ -1,0 +1,67 @@
+{
+  "label": "Plan",
+  "title": "A quiet weekend at home",
+  "summary": "A little preparation, then plenty of time to enjoy it.",
+  "facts": [
+    {
+      "label": "Length",
+      "value": "2 days"
+    },
+    {
+      "label": "Pace",
+      "value": "Easy"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "steps",
+      "title": "Your two days",
+      "steps": [
+        {
+          "label": "Day 1",
+          "title": "Make room",
+          "text": "Clear a table, choose a book and set aside an hour with no plans.",
+          "facts": [
+            {
+              "label": "When",
+              "value": "Morning"
+            }
+          ]
+        },
+        {
+          "label": "Day 1",
+          "title": "Cook something slow",
+          "text": "Prepare a pot of stew and let it simmer while you read.",
+          "facts": [
+            {
+              "label": "When",
+              "value": "Afternoon"
+            }
+          ]
+        },
+        {
+          "label": "Day 2",
+          "title": "Take it outside",
+          "text": "Pack lunch and find a quiet patch of shade.",
+          "facts": [
+            {
+              "label": "When",
+              "value": "Midday"
+            }
+          ]
+        },
+        {
+          "label": "Day 2",
+          "title": "Leave a little space",
+          "text": "Keep the evening free and enjoy the leftovers.",
+          "facts": [
+            {
+              "label": "When",
+              "value": "Evening"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

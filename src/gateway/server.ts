@@ -1463,9 +1463,13 @@ wss.on("connection", (ws) => {
   });
 });
 
-server.once("close", () => { if (hq) void import("../hq/hq.js").then((m) => m.stopHq()); });
+const pagePictures = await import("../pages/made.js");
+pagePictures.closePendingPictures();
+server.once("close", () => { pagePictures.madePictures.stop(); pagePictures.stopMadePictures(); if (hq) void import("../hq/hq.js").then((m) => m.stopHq()); });
 if (process.env.LH_V3 === "1") for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => {
   void (async () => {
+    pagePictures.madePictures.stop(); pagePictures.stopMadePictures();
+    await pagePictures.madePictures.drain();
     await (await import("../hq/hq.js")).stopHq();
     for (const ws of wss.clients) ws.terminate();
     server.closeAllConnections();

@@ -18,7 +18,8 @@ type State = {
   bots: TeamBot[]; selected: string | null; transcripts: Record<string, Transcript>; live: Record<string, Live>;
   safety: Safety; guard: "up" | "down"; engines: Record<string, EngineInfo>; items: Record<string, Item>;
   approvals: Record<string, Approval & { item_id?: string }>; connected: boolean; loaded: boolean; error: string | null;
-  page: string; viewer: Item | null; modal: "create" | "room" | "settings" | "search" | "bot" | "bot-card" | null;
+  page: string; viewer: Item | null; modal: "create" | "room" | "settings" | "search" | "bot" | "bot-card" | "bot-look" | null;
+  lookTarget?: string | null;
   collapsed: boolean; detailsOpen: boolean; setupBot: string | null; call: { bot: string; state: string } | null;
   room: { name: string; bots: string[] } | null;
   subscriptions: Subscription[]; composeDraft: { bot: string; text: string } | null;
@@ -115,6 +116,7 @@ export function handleEvent(message: unknown) {
       ...(s.selected === m.live.bot && s.bots.find(b => b.id === m.live.bot)?.computer && /browser|computer|screen|terminal|web page/i.test(m.live.doing ?? "") ? { detailsOpen: true } : {}) })); break;
     case "hq_computer": if (typeof m.bot === "string" && typeof m.computer?.has === "boolean") set(s => ({ computers: { ...s.computers, [m.bot]: m.computer }, bots: s.bots.map(b => b.id === m.bot ? { ...b, computer: m.computer.has } : b) })); break;
     case "hq_bots": if (Array.isArray(m.bots)) applyBots(m.bots); break;
+    case "hq_show_looks": if (typeof m.bot === "string" && useStore.getState().bots.some(b => b.id === m.bot)) set({ lookTarget: m.bot, modal: "bot-look" }); break;
     case "hq_safety": if (["open", "paused", "walled", "killed"].includes(m.safety?.level)) set({ safety: m.safety, ...(m.guard ? { guard: m.guard } : {}) }); break;
     case "hq_engine": void refreshSubscriptions().catch(() => {}); if (m.engine && typeof m.bot === "string") set(s => ({ engines: { ...s.engines, [m.bot]: m.engine } })); break;
     case "hello": void checkScreens(); if (Array.isArray(m.approvals)) set({ approvals: Object.fromEntries(m.approvals.map((a: Approval) => [a.id, a])) }); break;

@@ -1,0 +1,19 @@
+.team-looks { padding-bottom: 8px; }
+.team-look-preview { display: flex; align-items: center; gap: 14px; }
+.team-look-preview > svg { width: 76px; height: 76px; flex: none; }
+.team-look-preview b { display: block; font-size: 20px; }
+.team-look-preview span { display: block; margin-top: 4px; color: var(--ink-3); text-transform: capitalize; }
+.team-looks fieldset { padding: 0; border: 0; margin: 18px 0; min-width: 0; }
+.team-looks legend { font-weight: 600; margin-bottom: 12px; }
+.team-look-colours { display: flex; flex-wrap: wrap; gap: 8px; }
+.team .team-look-colours button { border-radius: 50%; background: var(--look-colour); color: white; border: 3px solid var(--raised); box-shadow: 0 0 0 1px var(--line); }
+.team-look-colours button span { visibility: hidden; }
+.team-look-colours button[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 1px; }
+.team-look-colours button[aria-pressed="true"] span { visibility: visible; }
+.team-look-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.team .team-look-grid button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 7px 2px; border-radius: 12px; background: var(--raised); border: 1px solid var(--line); font-size: 11px; line-height: 14px; text-transform: capitalize; }
+.team-look-grid svg { width: 44px; height: 44px; }
+.team .team-look-grid button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--desk); }
+.team-look-status { min-height: 1.5em; font-size: 14px; color: var(--ink-3); }
+.team-looks button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.team-looks button:disabled { opacity: .6; }

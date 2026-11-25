@@ -17,6 +17,10 @@ and read [the safety guide](docs/SAFETY.md) before giving a bot a computer or co
 If you are an AI coding helper setting this up for someone, read [CLAUDE.md](CLAUDE.md) first (the
 same text is in [AGENTS.md](AGENTS.md)), then [INSTALL.md](INSTALL.md).
 
+Recipes, instructions, plans and comparisons open as pages with a cover, quick facts, grouped tick lists and clear steps. Tick things off, open the large working view, or save a page file to use without a connection. Generic pictures can be made on your PC while you read; this is optional.
+
+![A recipe page with its ingredients and method](tests/fixtures/pages/look/recipe-page.png)
+
 ## Contents
 
 - [What it is, and what it is not](#what-it-is-and-what-it-is-not)

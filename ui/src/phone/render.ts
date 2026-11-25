@@ -106,7 +106,7 @@ export function renderItem(item: Item, animateIn: boolean, ctx: RenderCtx, camer
     case "page": {
       const sc = scrollPage(page, "", ctx);
       void loadPage().then(m => {
-        if (sc.isConnected) m.pageView(sc, item, id => ctx.onRow(item, id));
+        if (sc.isConnected) m.phonePageView(sc, rec, ctx.onRow);
       }).catch(() => { sc.textContent = "Connect once to open this page."; });
       break;
     }

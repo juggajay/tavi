@@ -8,6 +8,7 @@ import { toolGroups } from "./team/groups.js";
 import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
 import { attach, screenshot } from "./screens/index.js";
+import { clientById } from "../gateway/clients.js";
 
 const screenSockets = new WebSocketServer({ noServer: true, maxPayload: 32 * 1024 * 1024,
   handleProtocols: protocols => protocols.has("binary") ? "binary" : false });
@@ -61,7 +62,7 @@ function only(data: Record<string, unknown>, keys: string[]) {
   if (Object.keys(data).some((k) => !keys.includes(k))) throw new Error("That setting cannot be changed here.");
 }
 function message(data: Record<string, unknown>) {
-  only(data, ["text", "images", "test"]);
+  only(data, ["text", "images", "test", "client_id"]);
   if (typeof data.text !== "string" || !data.text.trim() || data.text.length > 50000) throw new Error("Write a message of up to 50000 letters.");
   if (data.test !== undefined && typeof data.test !== "boolean") throw new Error("The test setting must be true or false.");
   if (data.images !== undefined && (!Array.isArray(data.images) || data.images.length > 4 || data.images.some((s) => typeof s !== "string" || !/^(?:https:\/\/|data:image\/(?:png|jpeg|webp);base64,)/i.test(s))))
@@ -249,7 +250,10 @@ export async function handleHq(req: IncomingMessage, res: ServerResponse, url: U
       send(res, 200, { generation, rev: Math.max(after, ...all.map((r) => r.rev), 0), rows }); return true;
     }
     if (action === "messages" && method === "POST") {
-      send(res, 202, hq.ask(bot.id, { ...message(await body(req)), via: "typed", origin: null })); return true;
+      const data = await body(req);
+      const client = typeof data.client_id === "string" ? clientById(data.client_id) : undefined;
+      const origin = client?.v === 2 ? { client: client.kind, id: client.id } : null;
+      send(res, 202, hq.ask(bot.id, { ...message(data), via: "typed", origin })); return true;
     }
     if (action === "stop" && method === "POST") { hq.stopBot(bot.id); send(res, 200, { ok: true }); return true; }
     if (action === "fresh" && method === "POST") { send(res, 200, hq.fresh(bot.id)); return true; }

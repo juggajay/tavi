@@ -2,6 +2,20 @@
 
 These dates describe capabilities in the source. They are not a claim that every feature has been tried on every PC or phone. Installation and release review still matter.
 
+## 25 November 2026
+
+- Pages have a cover, quick facts, grouped tick lists and clear steps, with amounts apart from names and warnings beside the action. Recipes, plans, guides and comparisons arrive as pages you can follow and keep.
+- Start cooking opens a large working view. Go back, read ahead, swipe between steps on a phone, or return to All steps. Ticks and your place are remembered on this device.
+- Pictures of generic dishes and methods can be made on the PC and arrive one at a time while you read. They are labelled as made by AI. Real things still use real pictures. If making pictures is unavailable, the words are ready anyway.
+- Saved page files work without a connection, including pictures, ticks, search and the working view. Pictures still on their way are left out of the saved file. Printing gives a clean page with empty tick boxes.
+- Timers, changing the number of serves, unit conversion and maps on a plan are not included.
+- **Change a bot's look by asking.** Ask to see the choices, name a shape or icon, or say "make yourself blue". The choice stays until you change it again and appears across your open screens and the bot's computer. The phone now has the same shapes, icons and colours as the desktop, under "Change its look" in a bot's details.
+
+## 24 November 2026
+
+- A call starts cleanly. The screen shows it listening, and two soft notes play, only once the call's link is really up; before, words said in the first second or two could be lost. A bare hello ("hello", "can you hear me?") is answered at once without a bot's turn, in about two seconds where it took about ten.
+- How long each call took to set up (microphone, the device's network check, the voice service) is kept in the record, for when a start feels slow.
+
 ## 21 November 2026
 
 - Tavi has its own look: a family of soft, rounded bots as the mark and the icon, its own lettering, and orange with green and blue on charcoal or stone. Every icon and picture is made from the drawings by one script. Your own messages keep the colour of the bot you are talking to.

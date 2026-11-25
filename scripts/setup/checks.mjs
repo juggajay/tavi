@@ -1,8 +1,11 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 // Checks collect facts first. None of these steps enables a Windows feature.
 export const GiB = 1024 ** 3;
 export function checkFacts(facts, config, state, { live = false, adopt = false } = {}) {
   const rows = [];
   const add = (id, ok, line, fix) => rows.push({ id, ok: !!ok, line, fix });
+  add('page-pictures', true, (process.env.TAVI_CODEX_BIN ? existsSync(process.env.TAVI_CODEX_BIN) : (process.env.PATH || process.env.Path || '').split(path.delimiter).some(dir => ['codex.exe', 'codex.cmd', 'codex'].some(name => existsSync(path.join(dir, name))))) ? 'Pictures for pages: ready' : 'Install the Codex program and sign in to have pictures made. Everything else works without it.', 'Install the picture program and sign in if you want pictures made.');
   add('windows', facts.platform === 'win32' && facts.build >= 19045,
     'Windows 10 version 22H2 or Windows 11.', 'Run Windows Update. Windows build 19045 or later is needed.');
   add('node', facts.nodeMajor >= 24, 'Node 24 or later.', 'Install Node 24 from nodejs.org, then open a new terminal.');

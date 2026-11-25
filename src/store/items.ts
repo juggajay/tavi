@@ -193,7 +193,8 @@ export function updateItem(id: string, patch: { title?: string; source?: string;
   const payload = patch.payload ? PAYLOADS[it.kind].parse({ ...(it.payload as object), ...patch.payload }) : it.payload;
   const next = { ...it, title: patch.title ?? it.title, source: patch.source ?? it.source, payload } as Item;
   rememberMaker(next, itemBot(it));
-  db.prepare("UPDATE items SET title = ?, source = ?, payload_json = ? WHERE id = ?").run(next.title, next.source, storedPayload(next), id);
+  if (testItems.has(id)) keepTestItem(next);
+  else db.prepare("UPDATE items SET title = ?, source = ?, payload_json = ? WHERE id = ?").run(next.title, next.source, storedPayload(next), id);
   bus.emit("item_update", { id, patch: { title: next.title, source: next.source, payload: next.payload } as Partial<Item> });
   return next;
 }

@@ -1,6 +1,6 @@
 import { savedValue } from "../../../../src/shared/earlier";
 // Adapted from Bot HQ (MIT), github.com/nickvasilescu/bot-hq
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useStore, set, selectBot, refresh, startBotSetup } from "../store";
 import { request } from "../lib/api";
 import { LookPicker } from "../avatar/LookPicker";
@@ -11,11 +11,11 @@ import type { SavedJobCard } from "../types";
 import { JobCard } from "./JobCard";
 import { Modal } from "./Modal";
 export function ConfigLayer() {
-  const { modal, bots, selected } = useStore();
-  const close = () => set({ modal: null });
+  const { modal, bots, selected, lookTarget } = useStore();
+  const close = () => set({ modal: null, lookTarget: null });
   if (modal === "settings") return <Modal label="Appearance" onClose={close}><p>Choose what is easiest on your eyes.</p><div className="button-row">{["light", "dark", "system"].map(theme => <button className="btn btn--secondary" key={theme} onClick={() => { localStorage.setItem("tavi-hq-theme", theme); document.documentElement.dataset.theme = theme === "system" ? matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" : theme; }}>{theme[0].toUpperCase() + theme.slice(1)}</button>)}</div></Modal>;
   if (modal === "create") return <JobCard onClose={close} />;
-  if (modal === "bot" || modal === "bot-card") { const bot = bots.find(b => b.id === selected); return bot ? <BotSettings key={bot.id + modal} bot={bot} onClose={close} manual={modal === "bot-card"} /> : null; }
+  if (modal === "bot" || modal === "bot-card" || modal === "bot-look") { const bot = bots.find(b => b.id === (modal === "bot-look" ? lookTarget : selected)); return bot ? <BotSettings key={bot.id + modal} bot={bot} onClose={close} manual={modal === "bot-card"} look={modal === "bot-look"} /> : null; }
   if (modal === "room") return <CreateGroupModal onClose={close} />;
   if (modal === "search") return <SearchModal onClose={close} />;
   return null;
@@ -24,14 +24,15 @@ function SearchModal({ onClose }: { onClose: () => void }) {
   const bots = useStore(s => s.bots), [query, search] = useState("");
   return <Modal label="Find a bot" onClose={onClose}><input className="text-input" type="search" aria-label="Bot name or job" value={query} onChange={e => search(e.target.value)} /><div className="search-results">{bots.filter(b => `${b.name} ${b.role}`.toLowerCase().includes(query.toLowerCase())).map(b => <button className="bot-row" key={b.id} onClick={() => { void selectBot(b.id); onClose(); }}><BotAvatar {...b.look} /><span>{b.name} · {b.role}</span></button>)}</div></Modal>;
 }
-function BotSettings({ bot, onClose, manual = false }: { bot: TeamBot; onClose: () => void; manual?: boolean }) {
-  const [view, show] = useState<"about" | "card" | "look" | "remove">(manual ? "card" : "about");
+function BotSettings({ bot, onClose, manual = false, look = false }: { bot: TeamBot; onClose: () => void; manual?: boolean; look?: boolean }) {
+  const [view, show] = useState<"about" | "card" | "look" | "remove">(look ? "look" : manual ? "card" : "about");
   const lead = useStore(s => s.bots.find(b => b.lead));
   const choice = useStore(s => s.engines[bot.id]?.primary) ?? bot.primary;
   const [name, setName] = useState(bot.name), [purpose, setPurpose] = useState(bot.card?.purpose ?? bot.role);
   const [outside, setOutside] = useState(bot.card?.notFor ?? ""), [result, setResult] = useState(bot.card?.handsBack ?? ""), [ask, setAsk] = useState(bot.card?.stopAndAsk ?? "");
   const [soul, setSoul] = useState(bot.soul);
   const [shape, setShape] = useState(bot.look.shape), [colour, setColour] = useState(bot.look.colour);
+  useEffect(() => { setShape(bot.look.shape); setColour(bot.look.colour); }, [bot.look.shape, bot.look.colour]);
   const [error, setError] = useState<string | null>(null), [busy, setBusy] = useState(false);
   const action = useRef<HTMLButtonElement | null>(null);
   const open = (next: typeof view, button: HTMLButtonElement) => { action.current = button; setError(null); show(next); };

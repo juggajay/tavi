@@ -6,6 +6,7 @@ import { forkSession, query, type EffortLevel, type Query, type SDKUserMessage, 
 import { makeDemoServer, TOOL_LABELS } from "./demoTools.js";
 import { makeMailServer } from "./mailTools.js";
 import { makeMemoryServer } from "./memoryTools.js";
+import { makeLookServer } from "../hq/toolbox/looks.js";
 import { makeDrawingServer } from "./drawingTools.js";
 import { makeShowServer } from "./showTools.js";
 import { makeModelServer } from "./modelTools.js";
@@ -43,6 +44,7 @@ const MCP = (ctx: TurnCtx) => ({
   site: makeDemoServer(ctx),
   mail: makeMailServer(ctx),
   memory: makeMemoryServer(ctx),
+  ...(process.env.LH_V3 === "1" ? { team: makeLookServer(ctx) } : {}),
   drawings: makeDrawingServer(ctx),
   actions: makeActionServer(ctx),
   show: makeShowServer(ctx),
@@ -58,7 +60,8 @@ const MCP = (ctx: TurnCtx) => ({
 const BUILTIN = ["WebSearch", "WebFetch"];
 // Connector tools from the user's Claude account (Gmail, Calendar, Drive...) are deliberately NOT listed here:
 // CONNECTOR_GUARDS is their only way in, and it follows the Read/Write permissions the user set in Setup.
-const ALLOWED = ["mcp__site__*", "mcp__mail__*", "mcp__memory__*", "mcp__drawings__*", "mcp__actions__*", "mcp__show__*", "mcp__files__*", "mcp__reference__*", "mcp__calc__*", "mcp__model__*", "mcp__shop__*", "mcp__computers__*", "mcp__brainlink__*", ...BUILTIN];
+const LOOK_ALLOWED = process.env.LH_V3 === "1" ? ["mcp__team__*"] : [];
+const ALLOWED = [...LOOK_ALLOWED, "mcp__site__*", "mcp__mail__*", "mcp__memory__*", "mcp__drawings__*", "mcp__actions__*", "mcp__show__*", "mcp__files__*", "mcp__reference__*", "mcp__calc__*", "mcp__model__*", "mcp__shop__*", "mcp__computers__*", "mcp__brainlink__*", ...BUILTIN];
 // Before the conversation is ever compacted, the memory keeper reads it first (it works from the saved log, so this is a
 // belt-and-braces catch-up; nothing said is lost either way).
 const BEFORE_COMPACT = [{ hooks: [async () => (void runKeeper("before compaction"), {})] }];

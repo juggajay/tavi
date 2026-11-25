@@ -36,3 +36,19 @@ await tools.find(t => t.name === "save_page")!.handler({ item_id: shownTest.item
 assert.deepEqual(counts(), before, "Test turns change no records or files.");
 const bad = await showPage(maker, { ...description, html: "anything" }); assert.ok("error" in bad);
 console.log("Pages keep their maker, reopen, appear in lists and Things made, pin, and save nothing on test turns.");
+
+// A list or steps squeezed into a paragraph is refused, with what to use instead; ordinary writing is left alone.
+{
+  const { crammedParagraph } = await import("../../src/brain/pageTools.js");
+  const { readFileSync } = await import("node:fs");
+  const page = (name: string) => JSON.parse(readFileSync(new URL(`../fixtures/pages/${name}.json`, import.meta.url), "utf8"));
+  const asked = crammedParagraph(page("recipe-asked"));
+  assert.match(asked ?? "", /paragraph holding/); assert.match(asked ?? "", /list block/); assert.match(asked ?? "", /steps block/);
+  for (const name of ["recipe", "comparison", "plan"]) assert.equal(crammedParagraph(page(name)), null, name);
+  const prose = "A long piece of ordinary writing that explains one idea at a comfortable length, well past ninety characters in every paragraph of it.";
+  assert.equal(crammedParagraph({ title: "Notes", blocks: [{ type: "paragraph", parts: [{ text: [prose, prose, prose, prose, prose, prose].join("\n\n") }] }] }), null, "long writing is not a list");
+  assert.match(crammedParagraph({ title: "Steps", blocks: [{ type: "paragraph", parts: [{ text: "1. Heat the pan.\n2. Add the oil." }] }] }) ?? "", /numbered steps/);
+  const refused = await showPage(maker, page("recipe-asked"));
+  assert.ok("error" in refused && /Please fix the page/.test(refused.error), "the tool refuses the wall of text");
+  console.log("page-tools: a list or steps inside a paragraph is refused with what to use instead");
+}

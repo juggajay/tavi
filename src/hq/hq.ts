@@ -31,6 +31,7 @@ import { Computers } from "./screens/service.js";
 import { fenceApplied } from "./screens/computer.js";
 import { setProactiveRunner } from "../proactive/runner.js";
 import { teamProactive } from "./proactive.js";
+import { installLooks } from "./toolbox/looks.js";
 import { twinName, twinSecret, separateWork, workLane, conversationLane, laneKey, type TurnLane } from "./toolbox/lanes.js";
 import { wireFinds } from "./finds/wiring.js";
 import { installWebLevel } from "../web/index.js";
@@ -133,6 +134,7 @@ export class Hq extends EventEmitter {
   private changed = new EventEmitter();
   private hermesSetup: HermesOptions;
   private offTeam?: () => void;
+  private offLooks: () => void;
   private offProactive?: () => void;
   private offFinds?: () => Promise<void>;
   private offWeb?: () => void;
@@ -144,6 +146,7 @@ export class Hq extends EventEmitter {
 
   constructor(readonly options: HqOptions = {}) {
     super();
+    this.offLooks = installLooks({ changed: bot => { this.botsChanged(); void this.ensure(bot); } });
     this.guard = options.guard ?? new GuardClient();
     const guard = this.guard;
     this.computers = new Computers(guard, (bot, computer) => {
@@ -883,6 +886,7 @@ export class Hq extends EventEmitter {
     if (toolbox) { toolbox.server.closeAllConnections(); await toolbox.close().catch(() => undefined); }
   }
   async close() {
+    this.offLooks();
     this.closed = true; this.offGuard(); this.offTeam?.(); this.offProactive?.();
     await this.emergencyStop();
     this.offWeb?.();

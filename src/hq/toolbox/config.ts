@@ -29,7 +29,7 @@ export function hermesMcpServers(botId: string, o: { baseUrl: string; token: str
   const base = new URL(o.baseUrl);
   if (!/^https?:$/.test(base.protocol) || base.username || base.password || base.search || base.hash) throw new Error("Please use a plain web address for the toolbox.");
   const root = base.href.replace(/\/+$/, "");
-  return Object.fromEntries(o.servers.map((server) => {
+  return Object.fromEntries([...new Set([...o.servers, "team"])].map((server) => {
     if (!ALL_SERVERS.includes(server)) throw new Error("That tool server is not available.");
     return [HERMES_NAME[server] ?? server, { url: `${root}/mcp/${encodeURIComponent(botId)}/${server}`, headers: { Authorization: `Bearer ${o.token}` }, timeout: 600, connect_timeout: 30 }];
   }));

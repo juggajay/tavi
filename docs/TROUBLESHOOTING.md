@@ -24,3 +24,11 @@ Start with the smallest check. Read the current safety state and the selected da
 | Export refuses to run | In the private source the reviewer must supply the real private list. Fix reported file/line findings or stale cleaning rules. An edited export loses its proof; rebuild it. Never turn off the scanner to publish. |
 
 Keep diagnostic material local. A helpful issue report has the public version, Windows and Node versions, a short error, what happened and steps using made-up data. Remove account details, file paths identifying people, addresses, private network names, tokens and screenshots of sign-ins. Do not attach the full database or log folder.
+
+## Pictures not arriving on a page
+
+The words appear first. Made pictures usually take about a minute; two are made at once. If a picture cannot be made, its space closes quietly. The bot receives a reason when pictures are switched off, the daily limit is reached, the program is missing, or a description fails the privacy check. Ask for a general description or a real picture instead.
+
+Check that `pages.pictures` is on and the day's allowance has room. Install the optional Codex program and sign in yourself if needed. A missing sign-in discovered during a run is remembered for ten minutes; after signing in, wait that long and ask for a new page. An unavailable chosen model is tried once with the program's own choice. A picture stops after two and a half minutes. Restarting closes any spaces still waiting.
+
+Saving keeps the pictures already present and leaves out those still on their way. Save again from the original page after they arrive to include them. Ticks and your place stay on this device; they do not travel to another device. Timers, serving changes, unit conversion and maps are not supplied.

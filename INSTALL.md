@@ -232,3 +232,9 @@ what will be lost, verifies ownership, then removes only the chosen Linux space
 and chosen data folder. Bot files, downloads, subscription sign-ins,
 conversations, memory and settings are lost. Back them up first. A plain
 uninstall never does this. Source files and other Linux spaces stay in place.
+
+## Optional pictures for pages
+
+To have pictures made for recipes and other generic things, install the Codex program on this PC and sign in yourself. Keep it on the command path, or set `TAVI_CODEX_BIN` to its program file. Everything else works without it. The installer reports this as advice, never a failed check.
+
+The settings are `pages.pictures` (`on` or `off`, on by default), `pages.pictures_per_day` (40 by default), and `pages.picture_model` (empty uses the program's own choice). Picture descriptions pass the same privacy check as web searches. Do not include private details. No sign-in file is opened by Tavi.

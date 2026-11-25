@@ -8,6 +8,7 @@ import type { Voice } from "../voice";
 import { esc } from "../items/describe";
 import { dress, face } from "./character";
 import { createLayers } from "./layers";
+import type { phoneLooks } from "./looks";
 import { elapsed, stepCount, stepJob, stepSummary } from "./progress";
 import { phoneWelcome } from "./onboarding";
 
@@ -368,7 +369,23 @@ export function createTeamPhone(h: Hooks) {
     article.innerHTML = `<small>${esc(bots.find(b => b.id === id)?.name ?? id)}</small><p>${esc(text)}</p>`;
     answers.scrollIntoView({ block: "end", behavior: "smooth" });
   }
-  const layers = createLayers({ bots: () => bots, rows, engines, selected: () => selected, fixture: () => fixture, body, show, close, request, error, choose, conversation, fresh, screen, roomPanel, safetyPanel, openCard, open: h.open,
+  let lookSheet: ReturnType<typeof phoneLooks> | undefined, lookBot = "";
+  async function looks(id: string) {
+    const chosen = bots.find(b => b.id === id); if (!chosen) return;
+    show(chosen.name + " · Look", "look"); lookBot = id;
+    body.textContent = "Opening the choices…";
+    try {
+      const { phoneLooks } = await import("./looks");
+      if (mode !== "look" || lookBot !== id) return;
+      const current = bots.find(b => b.id === id); if (!current) return close();
+      lookSheet = phoneLooks(body, current.name, current.look, async look => {
+        if (!fixture) await request(path(id), { look }, "PATCH");
+        bots = bots.map(b => b.id === id ? { ...b, look } : b);
+        choose(selected);
+      }, close);
+    } catch { if (mode === "look" && lookBot === id) error("Couldn't open the choices. Close this sheet and try again."); }
+  }
+  const layers = createLayers({ looks, bots: () => bots, rows, engines, selected: () => selected, fixture: () => fixture, body, show, close, request, error, choose, conversation, fresh, screen, roomPanel, safetyPanel, openCard, open: h.open,
     settings: () => {
       close(); document.dispatchEvent(new Event("phone-settings"));
       const quick = document.getElementById("quick")!;
@@ -432,7 +449,13 @@ export function createTeamPhone(h: Hooks) {
     if (m.type === "hq_row" && m.row) { merge(m.row); if (mode === "conversation" && m.row.bot === selected) renderRows(); if (m.row.bot === selected && m.row.body.kind === "message" && m.row.body.from === "bot") { caption(); if (m.row.body.via === "typed" && !m.row.body.streaming && !h.voice.on) h.say(m.row.body.text); } updateLive(); if (mode === "work") renderWork(); if (mode === "room" && roomMembers.includes(m.row.bot) && m.row.body.kind === "message" && m.row.body.from === "bot") roomAnswer(m.row.bot, m.row.body.text); }
     else if (m.type === "hq_row_dropped" && m.bot) { rows.set(m.bot, (rows.get(m.bot) ?? []).filter(r => r.generation !== m.generation || r.seq !== m.seq)); if (mode === "conversation") renderRows(); }
     else if (m.type === "hq_live" && m.live) { seen.live.set(m.live.bot, (seen.live.get(m.live.bot) ?? 0) + 1); lives = lives.filter(l => l.bot !== m.live!.bot).concat(m.live); for (const [id, job] of work) if (job.bot === m.live.bot && m.live.work) work.delete(id); updateLive(); if (mode === "work") renderWork(); if (mode === "conversation" && m.live.bot === selected) renderRows(); }
-    else if (m.type === "hq_bots" && m.bots) { seen.bots++; bots = m.bots; choose(bot()?.id ?? bots.find(b => b.lead)?.id ?? bots[0]?.id ?? ""); }
+    else if (m.type === "hq_show_looks" && m.bot) looks(m.bot);
+    else if (m.type === "hq_bots" && m.bots) {
+      seen.bots++; bots = m.bots; choose(bot()?.id ?? bots.find(b => b.lead)?.id ?? bots[0]?.id ?? "");
+      if (mode === "look") { const next = bots.find(b => b.id === lookBot); if (next) lookSheet?.update(next.look); else close(); }
+      if (mode === "card") { const id = body.querySelector<HTMLButtonElement>('[data-go="talk"]'); const chosen = bots.find(b => id?.textContent === 'Talk to ' + b.name); if (chosen) body.querySelector('.team-card-face')!.innerHTML = face(chosen.look); }
+      if (mode === "team-list") layers.team();
+    }
     else if (m.type === "hq_safety" && m.safety) { seen.safety++; acceptSafety({ safety: m.safety, guard: m.guard }); if (mode === "safety") safetyPanel(); }
     else if (m.type === "hq_engine" && m.bot && m.engine) {
       engines.set(m.bot, m.engine);

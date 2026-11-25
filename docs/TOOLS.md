@@ -242,6 +242,8 @@ Job cards, trials, bounded hand-overs, questions, engine settings and optional f
 | `finds_settings` | [src/hq/finds/tools.ts](../src/hq/finds/tools.ts) |
 | `find_reaction` | [src/hq/finds/tools.ts](../src/hq/finds/tools.ts) |
 | `sent_finds` | [src/hq/finds/tools.ts](../src/hq/finds/tools.ts) |
+| `show_looks` | [src/hq/toolbox/looks.ts](../src/hq/toolbox/looks.ts) |
+| `set_look` | [src/hq/toolbox/looks.ts](../src/hq/toolbox/looks.ts) |
 
 ## web
 

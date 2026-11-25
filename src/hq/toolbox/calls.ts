@@ -1,3 +1,4 @@
+import { PAGE_EXAMPLE } from "../../shared/pages/shape.js";
 import { audit } from "../../store/log.js";
 import { noteOutsideRead } from "../../brain/turn.js";
 import { noteSourceCall } from "../../brain/sourceLedger.js";
@@ -48,8 +49,10 @@ export async function runTool(botId: string, server: string, name: string, args:
     if (!tool) return (result = refused("That tool is not available here, so nothing was done."));
     const parsed = argumentSchema(tool.inputSchema).safeParse(args === undefined ? {} : args);
     if (!parsed.success) {
-      const field = parsed.error.issues[0]?.path.join(".") || "arguments";
-      return (result = refused(`Please check the ${field} field and try again.`));
+      // Say what is wrong with each field (up to three), in the checker's own words: they name kinds and allowed
+      // values, never what was sent. "Please check the field" alone left a bot guessing, and it gave up after three goes.
+      const faults = parsed.error.issues.slice(0, 3).map((issue) => `${issue.path.join(".") || "arguments"}: ${issue.message}`).join("; ").slice(0, 600);
+      return (result = refused(`Please fix this and try again. ${faults}${name === "show_page" ? ` A small page in the right shape: ${PAGE_EXAMPLE}` : ""}`));
     }
     // WEB_GUARDS and CONNECTOR_GUARDS cover Claude's own tools. Hermes does not have those tools.
     noteOutsideRead(ctx, fullName);

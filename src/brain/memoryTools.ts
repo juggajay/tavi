@@ -365,7 +365,7 @@ export const memoryTools = (ctx: TurnCtx) =>
         }),
       READ,
     ),
-  ].map((t) => ["remember", "recall", "forget"].includes(t.name) ? t : {
+  ].filter(t => process.env.LH_V3 !== "1" || t.name !== "set_pebble_colour").map((t) => ["remember", "recall", "forget"].includes(t.name) ? t : {
     ...t,
     handler: async (args, extra) => isSpecialist(ctx)
       ? json({ error: "That belongs to the lead's shared records. Use propose_shared_note to put a change to the owner." })

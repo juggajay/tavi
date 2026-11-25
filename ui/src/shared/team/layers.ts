@@ -15,6 +15,7 @@ type Hooks = {
   screen: (bot: TeamBot) => Promise<void>; roomPanel: () => void; safetyPanel: () => void; settings: () => void;
   openCard: (ref: string, kind: string) => Promise<void>; tell: (words: string) => void;
   open: (item: Item) => void;
+  looks: (id: string) => void;
 };
 const company = (provider: string) => ({ anthropic: "Claude", "openai-codex": "OpenAI", "openai-api": "OpenAI · pay as you go", openrouter: "Other models" })[provider] ?? provider;
 const path = (id: string) => `/api/hq/bots/${encodeURIComponent(id)}`;
@@ -68,8 +69,8 @@ export function createLayers(h: Hooks) {
   async function botCard(id: string) {
     const b = h.bots().find(b => b.id === id); if (!b) return;
     show(b.name, "card"); mark("card"); const order = ++ticket;
-    body.innerHTML = `<div class="team-card-face">${face(b.look)}</div><p>${esc(b.role)}</p><p class="team-muted">Subscription: ${esc(company(b.primary.provider))} · ${esc(b.primary.model)} · ${esc(b.primary.effort ?? "default")}</p>${button("talk", `Talk to ${esc(b.name)}`)}<div class="team-edit-host"></div>${button("job-card", "Read or change job card")}${button("engine", "Change engine")}${button("computer", b.computer ? "Switch off its computer" : "Give it its own computer")}${b.computer ? `<button class="team-still" aria-label="Watch ${esc(b.name)}'s computer"><img src="${esc(h.fixture()?.still ?? `${path(id)}/screen.png`)}" alt="${esc(b.name)}'s computer screen"><span>Watch computer · Live view</span></button>` : '<p class="team-muted">No computer. This bot helps in conversation.</p>'}${button("fresh", "New conversation")}${h.bots().length > 1 ? button("remove", "Remove bot") : button("talk-add", "Add a bot by talking") + button("form-add", "Fill in a job card")}`;
-    bind({ talk: () => { h.choose(id); h.close(); }, "job-card": () => void editCard(b), engine: () => void engine(b), computer: () => computer(b), fresh: () => void h.fresh(id), remove: () => remove(b), "talk-add": () => h.tell("Set up a new bot for…"), "form-add": () => void editCard() });
+    body.innerHTML = `<div class="team-card-face">${face(b.look)}</div><p>${esc(b.role)}</p><p class="team-muted">Subscription: ${esc(company(b.primary.provider))} · ${esc(b.primary.model)} · ${esc(b.primary.effort ?? "default")}</p>${button("talk", `Talk to ${esc(b.name)}`)}<div class="team-edit-host"></div>${button("job-card", "Read or change job card")}${button("look", "Change its look")}${button("engine", "Change engine")}${button("computer", b.computer ? "Switch off its computer" : "Give it its own computer")}${b.computer ? `<button class="team-still" aria-label="Watch ${esc(b.name)}'s computer"><img src="${esc(h.fixture()?.still ?? `${path(id)}/screen.png`)}" alt="${esc(b.name)}'s computer screen"><span>Watch computer · Live view</span></button>` : '<p class="team-muted">No computer. This bot helps in conversation.</p>'}${button("fresh", "New conversation")}${h.bots().length > 1 ? button("remove", "Remove bot") : button("talk-add", "Add a bot by talking") + button("form-add", "Fill in a job card")}`;
+    bind({ talk: () => { h.choose(id); h.close(); }, "job-card": () => void editCard(b), look: () => h.looks(id), engine: () => void engine(b), computer: () => computer(b), fresh: () => void h.fresh(id), remove: () => remove(b), "talk-add": () => h.tell("Set up a new bot for…"), "form-add": () => void editCard() });
     body.querySelector<HTMLButtonElement>(".team-still")?.addEventListener("click", () => void h.screen(b));
     // Read the card now so its purpose is available even before editing.
     try {
@@ -161,5 +162,5 @@ export function createLayers(h: Hooks) {
     show("What's new", "new");
     body.innerHTML = changes.split("\n").filter(line => line.trim() && !/^# /.test(line)).map(line => line.startsWith("#") ? `<h3>${esc(line.replace(/^#+\s*/, ""))}</h3>` : `<p>${esc(line.replace(/^- /, "")).replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")}</p>`).join("");
   }
-  return { more, botCard };
+  return { more, botCard, team };
 }
